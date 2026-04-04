@@ -130,9 +130,6 @@ export function Header() {
         <div className="flex items-center gap-4 text-sm text-gray-600 min-w-0 overflow-hidden">
           <span className="hidden sm:inline shrink-0">月返済: <span className="font-semibold text-gray-900">¥{monthly}</span></span>
           <span className="shrink-0">完済: <span className="font-semibold text-gray-900">{payoff}</span></span>
-          {summary.firstShortageAge && (
-            <span className="text-red-600 font-semibold shrink-0 text-xs">⚠ {summary.firstShortageAge}歳資金ショート</span>
-          )}
           <span className="text-xs text-gray-400 truncate hidden md:inline">{scenario.scenario.name}</span>
         </div>
         <ScenarioMenu />
