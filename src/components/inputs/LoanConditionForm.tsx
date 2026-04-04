@@ -28,7 +28,7 @@ export function LoanConditionForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SliderInput
-          label="借入元本"
+          label="物件価格"
           value={loan.principal / 10000}
           onChange={(v) => updateLoan('principal', v * 10000)}
           min={0} max={20000} step={100} unit="万円"
@@ -40,7 +40,14 @@ export function LoanConditionForm() {
           onChange={(v) => updateLoan('downPayment', v * 10000)}
           min={0} max={5000} step={50} unit="万円"
         />
+      </div>
 
+      <div className="bg-gray-50 rounded-lg px-4 py-2 text-sm text-gray-700">
+        借入額：<span className="font-semibold text-blue-700">{((loan.principal - (loan.downPayment ?? 0)) / 10000).toLocaleString()} 万円</span>
+        <span className="text-xs text-gray-400 ml-2">（物件価格 − 頭金）</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SliderInput
           label="借入開始年齢"
           value={loan.startAge}

@@ -27,7 +27,8 @@ export function simulate(scenario: Scenario): SimulationResult {
   const rows: AnnualRow[] = []
   let cash = assets.initialCash
   let liquidAssets = assets.initialLiquidAssets
-  let loanBalance = loan.principal
+  const loanPrincipal = Math.max(0, loan.principal - (loan.downPayment ?? 0))
+  let loanBalance = loanPrincipal
   let totalRepayment = 0
   let totalInterest = 0
 
@@ -298,7 +299,7 @@ export function simulate(scenario: Scenario): SimulationResult {
 
   // サマリー生成
   const rate = resolveRate(loan.rateSchedule, 1)
-  const currentMonthlyPayment = calcEqualPaymentMonthly(loan.principal, rate, loan.loanTermYears * 12)
+  const currentMonthlyPayment = calcEqualPaymentMonthly(loanPrincipal, rate, loan.loanTermYears * 12)
 
   const row60 = rows.find((r) => r.age === 60)
   const row65 = rows.find((r) => r.age === 65)
