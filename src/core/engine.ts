@@ -282,7 +282,9 @@ export function simulate(scenario: Scenario): SimulationResult {
       spouseNetIncome -
       loanRepaymentAnnual -
       housingTaxAnnual -
-      livingCostAnnual +
+      livingCostAnnual -
+      smallBusinessMutual -
+      bankruptcyMutual +
       specialCashflow
 
     // 9. 現金・資産更新
