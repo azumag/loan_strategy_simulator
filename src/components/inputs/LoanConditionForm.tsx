@@ -35,6 +35,13 @@ export function LoanConditionForm() {
         />
 
         <SliderInput
+          label="頭金"
+          value={(loan.downPayment ?? 0) / 10000}
+          onChange={(v) => updateLoan('downPayment', v * 10000)}
+          min={0} max={5000} step={50} unit="万円"
+        />
+
+        <SliderInput
           label="借入開始年齢"
           value={loan.startAge}
           onChange={(v) => updateLoan('startAge', v)}

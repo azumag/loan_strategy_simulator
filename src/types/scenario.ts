@@ -25,6 +25,7 @@ export interface Scenario {
   scenario: ScenarioConfig
   loan: LoanConfig
   careerStages: CareerStage[]
+  spouseCareerStages: CareerStage[]
   tax: TaxConfig
   housing: HousingConfig
   living: LivingConfig

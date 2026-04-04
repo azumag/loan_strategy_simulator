@@ -23,6 +23,12 @@ function migrateScenario(loaded: unknown): Scenario {
       }
       return stage
     }),
+    spouseCareerStages: (s.spouseCareerStages ?? []).map(stage => {
+      if (stage.workStyle === 'self_employed') {
+        return { ...{ bankruptcyMutualAnnual: 0 }, ...stage }
+      }
+      return stage
+    }),
   }
 }
 
@@ -30,6 +36,7 @@ type ScenarioAction =
   | { type: 'UPDATE_SCENARIO'; payload: Partial<Scenario['scenario']> }
   | { type: 'UPDATE_LOAN'; payload: Partial<Scenario['loan']> }
   | { type: 'UPDATE_CAREER_STAGES'; payload: Scenario['careerStages'] }
+  | { type: 'UPDATE_SPOUSE_CAREER_STAGES'; payload: Scenario['spouseCareerStages'] }
   | { type: 'UPDATE_TAX'; payload: Partial<Scenario['tax']> }
   | { type: 'UPDATE_HOUSING'; payload: Partial<Scenario['housing']> }
   | { type: 'UPDATE_LIVING'; payload: Partial<Scenario['living']> }
@@ -48,6 +55,8 @@ function scenarioReducer(state: Scenario, action: ScenarioAction): Scenario {
       return { ...state, loan: { ...state.loan, ...action.payload } }
     case 'UPDATE_CAREER_STAGES':
       return { ...state, careerStages: action.payload }
+    case 'UPDATE_SPOUSE_CAREER_STAGES':
+      return { ...state, spouseCareerStages: action.payload }
     case 'UPDATE_TAX':
       return { ...state, tax: { ...state.tax, ...action.payload } }
     case 'UPDATE_HOUSING':

@@ -7,6 +7,7 @@ export interface RateScheduleEntry {
 
 export interface LoanConfig {
   principal: number
+  downPayment: number
   startAge: number
   loanTermYears: number
   repaymentType: RepaymentType

@@ -11,6 +11,7 @@ export const DEFAULT_SCENARIO: Scenario = {
   },
   loan: {
     principal: 30_000_000,
+    downPayment: 0,
     startAge: 40,
     loanTermYears: 35,
     repaymentType: 'equal_payment',
@@ -54,6 +55,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     fixedAssetTaxAnnual: 200_000,
     cityPlanningTaxAnnual: 50_000,
     homeInsuranceAnnual: 50_000,
+    homeInsuranceDeductible: false,
     maintenanceAnnual: 150_000,
     otherHousingCostAnnual: 0,
   },
@@ -72,6 +74,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     annualSavingsContribution: 0,
     emergencyUsableRatio: 0.7,
   },
+  spouseCareerStages: [],
   events: [],
   strategy: {
     prepayments: [],

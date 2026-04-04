@@ -22,7 +22,7 @@ const BANKRUPTCY_MUTUAL_TOTAL_MAX  = 8_000_000   // 累計800万円
 const SMALL_BUSINESS_MUTUAL_ANNUAL_MAX = 840_000  // 月7万×12
 
 export function simulate(scenario: Scenario): SimulationResult {
-  const { scenario: sc, loan, careerStages, tax, housing, living, assets, events, strategy, mutualAid } = scenario
+  const { scenario: sc, loan, careerStages, spouseCareerStages, tax, housing, living, assets, events, strategy, mutualAid } = scenario
 
   const rows: AnnualRow[] = []
   let cash = assets.initialCash
@@ -48,6 +48,11 @@ export function simulate(scenario: Scenario): SimulationResult {
     housing.otherHousingCostAnnual
 
   for (let age = sc.startAge; age <= sc.endAge; age++) {
+    // 頭金: ローン開始年に現金から差し引く
+    if (age === loan.startAge && loan.downPayment > 0) {
+      cash -= loan.downPayment
+    }
+
     const loanYear = age - loan.startAge + 1 // ローン開始からの年数
 
     // 1. キャリアステージ解決
@@ -70,7 +75,12 @@ export function simulate(scenario: Scenario): SimulationResult {
         effectiveHousingDeduction = 0
       }
     }
-    const effectiveTax = { ...tax, housingLoanDeductionAnnual: effectiveHousingDeduction }
+    const fireInsuranceDeduction = housing.homeInsuranceDeductible ? housing.homeInsuranceAnnual : 0
+    const effectiveTax = {
+      ...tax,
+      housingLoanDeductionAnnual: effectiveHousingDeduction,
+      otherDeductionAnnual: tax.otherDeductionAnnual + fireInsuranceDeduction,
+    }
 
     // 2. 収入算出
     let grossIncome = 0
@@ -174,6 +184,26 @@ export function simulate(scenario: Scenario): SimulationResult {
 
     prevWorkStyle = workStyle
 
+    // 3. 配偶者収入の計算
+    let spouseNetIncome = 0
+    if (spouseCareerStages && spouseCareerStages.length > 0) {
+      const spouseStage = resolveCareerStage(age, spouseCareerStages)
+      if (spouseStage) {
+        // 配偶者は基礎控除のみ適用（住宅ローン控除等は世帯主側で計上）
+        const spouseTaxConfig = { ...tax, housingLoanDeductionAnnual: 0, spouseDeductionAnnual: 0 }
+        if (spouseStage.workStyle === 'employee') {
+          const r = calcEmployeeTax(spouseStage, spouseTaxConfig)
+          spouseNetIncome = r.grossIncome - r.totalTaxBurden
+        } else if (spouseStage.workStyle === 'self_employed') {
+          const r = calcSoleProprietorTax(spouseStage, spouseTaxConfig)
+          spouseNetIncome = r.grossIncome - r.totalTaxBurden
+        } else if (spouseStage.workStyle === 'retired') {
+          const r = calcRetiredTax(spouseStage, spouseTaxConfig)
+          spouseNetIncome = r.grossIncome - r.totalTaxBurden
+        }
+      }
+    }
+
     // 4. ローン返済額算出
     let loanRepaymentAnnual = 0
     let interestPaid = 0
@@ -206,7 +236,8 @@ export function simulate(scenario: Scenario): SimulationResult {
     const totalTaxBurden = incomeTax + residentTax + socialInsurance + pensionContribution
     const netCashflow =
       grossIncome -
-      totalTaxBurden -
+      totalTaxBurden +
+      spouseNetIncome -
       loanRepaymentAnnual -
       housingTaxAnnual -
       livingCostAnnual +

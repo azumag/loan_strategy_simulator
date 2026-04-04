@@ -39,11 +39,133 @@ function newStageByWorkStyle(workStyle: WorkStyle): CareerStage {
   return EMPTY_RETIRED
 }
 
+function CareerStageList({
+  title,
+  stages,
+  onUpdate,
+  onAdd,
+  onRemove,
+  onChangeWorkStyle,
+}: {
+  title: string
+  stages: CareerStage[]
+  onUpdate: (index: number, patch: Partial<CareerStage>) => void
+  onAdd: () => void
+  onRemove: (index: number) => void
+  onChangeWorkStyle: (index: number, workStyle: WorkStyle) => void
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        {title && <h2 className="text-lg font-semibold text-gray-800">{title}</h2>}
+        <button onClick={onAdd} className="text-sm text-blue-600 hover:underline ml-auto">+ 追加</button>
+      </div>
+
+      {stages.map((stage, i) => (
+        <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={stage.fromAge}
+                  onChange={(e) => onUpdate(i, { fromAge: Number(e.target.value) })}
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <span className="text-sm text-gray-500">〜</span>
+                <input
+                  type="number"
+                  value={stage.toAge}
+                  onChange={(e) => onUpdate(i, { toAge: Number(e.target.value) })}
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <span className="text-sm text-gray-500">歳</span>
+              </div>
+              <select
+                value={stage.workStyle}
+                onChange={(e) => onChangeWorkStyle(i, e.target.value as WorkStyle)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value="employee">会社員・パート</option>
+                <option value="self_employed">個人事業主</option>
+                <option value="retired">退職後</option>
+              </select>
+            </div>
+            {stages.length > 1 && (
+              <button onClick={() => onRemove(i)} className="text-red-500 text-xs hover:underline">削除</button>
+            )}
+          </div>
+
+          {stage.workStyle === 'employee' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">入力モード</label>
+                <select
+                  value={stage.salaryInputMode}
+                  onChange={(e) => onUpdate(i, { salaryInputMode: e.target.value as 'gross' | 'takehome' })}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                >
+                  <option value="gross">額面</option>
+                  <option value="takehome">手取り</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {stage.salaryInputMode === 'gross' ? (
+                  <SliderInput label="額面年収" value={(stage.grossSalaryAnnual ?? 0) / 10000}
+                    onChange={(v) => onUpdate(i, { grossSalaryAnnual: v * 10000 })}
+                    min={0} max={5000} step={50} unit="万円" />
+                ) : (
+                  <SliderInput label="手取り年収" value={(stage.takehomeSalaryAnnual ?? 0) / 10000}
+                    onChange={(v) => onUpdate(i, { takehomeSalaryAnnual: v * 10000 })}
+                    min={0} max={5000} step={50} unit="万円" />
+                )}
+                <SliderInput label="賞与" value={stage.bonusAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { bonusAnnual: v * 10000 })}
+                  min={0} max={500} step={10} unit="万円" />
+              </div>
+            </div>
+          )}
+
+          {stage.workStyle === 'self_employed' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SliderInput label="年間売上" value={stage.grossRevenueAnnual / 10000}
+                onChange={(v) => onUpdate(i, { grossRevenueAnnual: v * 10000 })}
+                min={0} max={20000} step={100} unit="万円" />
+              <SliderInput label="必要経費" value={stage.businessExpenseAnnual / 10000}
+                onChange={(v) => onUpdate(i, { businessExpenseAnnual: v * 10000 })}
+                min={0} max={10000} step={50} unit="万円" />
+              <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
+                onChange={(v) => onUpdate(i, { bluePenaltyDeduction: v * 10000 })}
+                min={0} max={65} step={10} unit="万円" />
+            </div>
+          )}
+
+          {stage.workStyle === 'retired' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SliderInput label="国民年金" value={stage.retirementNationalPensionAnnual / 10000}
+                onChange={(v) => onUpdate(i, { retirementNationalPensionAnnual: v * 10000 })}
+                min={0} max={120} step={1} unit="万円/年" />
+              <SliderInput label="厚生年金" value={stage.retirementEmployeesPensionAnnual / 10000}
+                onChange={(v) => onUpdate(i, { retirementEmployeesPensionAnnual: v * 10000 })}
+                min={0} max={300} step={1} unit="万円/年" />
+              <SliderInput label="その他収入" value={stage.retirementOtherIncomeAnnual / 10000}
+                onChange={(v) => onUpdate(i, { retirementOtherIncomeAnnual: v * 10000 })}
+                min={0} max={300} step={5} unit="万円/年" />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function CareerStageEditor() {
   const { scenario, dispatch } = useScenario()
   const stages = scenario.careerStages
+  const spouseStages = scenario.spouseCareerStages ?? []
   const mutualAid = scenario.mutualAid
   const hasSelfEmployed = stages.some(s => s.workStyle === 'self_employed')
+  const spouseEnabled = spouseStages.length > 0
 
   const updateMutualAid = (patch: { smallBusinessMutualPayoutMethod?: SmallBusinessMutualPayoutMethod; smallBusinessMutualAnnuityYears?: number }) =>
     dispatch({ type: 'UPDATE_MUTUAL_AID', payload: patch })
@@ -69,113 +191,77 @@ export function CareerStageEditor() {
     dispatch({ type: 'UPDATE_CAREER_STAGES', payload: updated })
   }
 
+  const updateSpouseStage = (index: number, patch: Partial<CareerStage>) => {
+    const updated = spouseStages.map((s, i) => i === index ? { ...s, ...patch } as CareerStage : s)
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: updated })
+  }
+
+  const addSpouseStage = () => {
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: [...spouseStages, EMPTY_EMPLOYEE] })
+  }
+
+  const removeSpouseStage = (index: number) => {
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: spouseStages.filter((_, i) => i !== index) })
+  }
+
+  const changeSpouseWorkStyle = (index: number, workStyle: WorkStyle) => {
+    const base = newStageByWorkStyle(workStyle)
+    const updated = spouseStages.map((s, i) =>
+      i === index ? { ...base, fromAge: s.fromAge, toAge: s.toAge } : s
+    )
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: updated })
+  }
+
+  const enableSpouse = () => {
+    const initialStage: CareerStage = {
+      fromAge: 40, toAge: 64, workStyle: 'employee',
+      salaryInputMode: 'gross', grossSalaryAnnual: 3_000_000, bonusAnnual: 0, sideIncomeAnnual: 0,
+    }
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: [initialStage] })
+  }
+
+  const disableSpouse = () => {
+    dispatch({ type: 'UPDATE_SPOUSE_CAREER_STAGES', payload: [] })
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">キャリアシナリオ</h2>
-        <button onClick={addStage} className="text-sm text-blue-600 hover:underline">+ 追加</button>
-      </div>
+    <div className="space-y-6">
+      <CareerStageList
+        title="キャリアシナリオ（本人）"
+        stages={stages}
+        onUpdate={updateStage}
+        onAdd={addStage}
+        onRemove={removeStage}
+        onChangeWorkStyle={changeWorkStyle}
+      />
 
-      {stages.map((stage, i) => (
-        <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={stage.fromAge}
-                  onChange={(e) => updateStage(i, { fromAge: Number(e.target.value) })}
-                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-                <span className="text-sm text-gray-500">〜</span>
-                <input
-                  type="number"
-                  value={stage.toAge}
-                  onChange={(e) => updateStage(i, { toAge: Number(e.target.value) })}
-                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-                <span className="text-sm text-gray-500">歳</span>
-              </div>
-              <select
-                value={stage.workStyle}
-                onChange={(e) => changeWorkStyle(i, e.target.value as WorkStyle)}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
-              >
-                <option value="employee">会社員</option>
-                <option value="self_employed">個人事業主</option>
-                <option value="retired">退職後</option>
-              </select>
-            </div>
-            {stages.length > 1 && (
-              <button onClick={() => removeStage(i)} className="text-red-500 text-xs hover:underline">削除</button>
-            )}
-          </div>
-
-          {stage.workStyle === 'employee' && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">入力モード</label>
-                <select
-                  value={stage.salaryInputMode}
-                  onChange={(e) => updateStage(i, { salaryInputMode: e.target.value as 'gross' | 'takehome' })}
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
-                >
-                  <option value="gross">額面</option>
-                  <option value="takehome">手取り</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {stage.salaryInputMode === 'gross' ? (
-                  <SliderInput label="額面年収" value={(stage.grossSalaryAnnual ?? 0) / 10000}
-                    onChange={(v) => updateStage(i, { grossSalaryAnnual: v * 10000 })}
-                    min={0} max={5000} step={50} unit="万円" />
-                ) : (
-                  <SliderInput label="手取り年収" value={(stage.takehomeSalaryAnnual ?? 0) / 10000}
-                    onChange={(v) => updateStage(i, { takehomeSalaryAnnual: v * 10000 })}
-                    min={0} max={5000} step={50} unit="万円" />
-                )}
-                <SliderInput label="賞与" value={stage.bonusAnnual / 10000}
-                  onChange={(v) => updateStage(i, { bonusAnnual: v * 10000 })}
-                  min={0} max={500} step={10} unit="万円" />
-              </div>
-            </div>
-          )}
-
-          {stage.workStyle === 'self_employed' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SliderInput label="年間売上" value={stage.grossRevenueAnnual / 10000}
-                onChange={(v) => updateStage(i, { grossRevenueAnnual: v * 10000 })}
-                min={0} max={20000} step={100} unit="万円" />
-              <SliderInput label="必要経費" value={stage.businessExpenseAnnual / 10000}
-                onChange={(v) => updateStage(i, { businessExpenseAnnual: v * 10000 })}
-                min={0} max={10000} step={50} unit="万円" />
-              <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
-                onChange={(v) => updateStage(i, { bluePenaltyDeduction: v * 10000 })}
-                min={0} max={65} step={10} unit="万円" />
-              <SliderInput label="小規模企業共済" value={stage.smallBusinessMutualAnnual / 10000}
-                onChange={(v) => updateStage(i, { smallBusinessMutualAnnual: v * 10000 })}
-                min={0} max={84} step={1} unit="万円/年" />
-              <SliderInput label="倒産防止共済" value={stage.bankruptcyMutualAnnual / 10000}
-                onChange={(v) => updateStage(i, { bankruptcyMutualAnnual: v * 10000 })}
-                min={0} max={240} step={10} unit="万円/年" />
-            </div>
-          )}
-
-          {stage.workStyle === 'retired' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SliderInput label="国民年金" value={stage.retirementNationalPensionAnnual / 10000}
-                onChange={(v) => updateStage(i, { retirementNationalPensionAnnual: v * 10000 })}
-                min={0} max={120} step={1} unit="万円/年" />
-              <SliderInput label="厚生年金" value={stage.retirementEmployeesPensionAnnual / 10000}
-                onChange={(v) => updateStage(i, { retirementEmployeesPensionAnnual: v * 10000 })}
-                min={0} max={300} step={1} unit="万円/年" />
-              <SliderInput label="その他収入" value={stage.retirementOtherIncomeAnnual / 10000}
-                onChange={(v) => updateStage(i, { retirementOtherIncomeAnnual: v * 10000 })}
-                min={0} max={300} step={5} unit="万円/年" />
-            </div>
+      {/* 配偶者キャリアセクション */}
+      <div className="border-t pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-800">配偶者のキャリアシナリオ</h2>
+          {!spouseEnabled ? (
+            <button onClick={enableSpouse} className="text-sm text-blue-600 hover:underline">+ 追加</button>
+          ) : (
+            <button onClick={disableSpouse} className="text-sm text-red-500 hover:underline">削除</button>
           )}
         </div>
-      ))}
+        {!spouseEnabled && (
+          <p className="text-sm text-gray-400">配偶者の収入を追加するには「+ 追加」を押してください。</p>
+        )}
+        {spouseEnabled && (
+          <CareerStageList
+            title=""
+            stages={spouseStages}
+            onUpdate={updateSpouseStage}
+            onAdd={addSpouseStage}
+            onRemove={removeSpouseStage}
+            onChangeWorkStyle={changeSpouseWorkStyle}
+          />
+        )}
+        {spouseEnabled && (
+          <p className="text-xs text-gray-400 mt-1">※配偶者の税計算は基礎控除のみ適用。小規模企業共済・倒産防止共済は本人側のみ対応。</p>
+        )}
+      </div>
 
       {hasSelfEmployed && (
         <div className="border border-indigo-200 bg-indigo-50 rounded-lg p-4 space-y-4">

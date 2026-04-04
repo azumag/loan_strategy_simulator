@@ -11,6 +11,7 @@ export interface HousingConfig {
   fixedAssetTaxAnnual: number
   cityPlanningTaxAnnual: number
   homeInsuranceAnnual: number
+  homeInsuranceDeductible: boolean
   maintenanceAnnual: number
   otherHousingCostAnnual: number
 }

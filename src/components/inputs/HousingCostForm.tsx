@@ -80,12 +80,23 @@ export function HousingCostForm() {
           onChange={(v) => update('cityPlanningTaxAnnual', v * 10000)}
           min={0} max={50} step={1} unit="万円/年"
         />
-        <SliderInput
-          label="火災保険料"
-          value={housing.homeInsuranceAnnual / 10000}
-          onChange={(v) => update('homeInsuranceAnnual', v * 10000)}
-          min={0} max={30} step={1} unit="万円/年"
-        />
+        <div className="space-y-1">
+          <SliderInput
+            label="火災保険料"
+            value={housing.homeInsuranceAnnual / 10000}
+            onChange={(v) => update('homeInsuranceAnnual', v * 10000)}
+            min={0} max={30} step={1} unit="万円/年"
+          />
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={housing.homeInsuranceDeductible ?? false}
+              onChange={(e) => dispatch({ type: 'UPDATE_HOUSING', payload: { homeInsuranceDeductible: e.target.checked } })}
+              className="rounded"
+            />
+            賃貸・事業用途として必要経費に計上する
+          </label>
+        </div>
         <SliderInput
           label="修繕積立・維持費"
           value={housing.maintenanceAnnual / 10000}
