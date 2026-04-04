@@ -33,9 +33,24 @@ const EMPTY_RETIRED: CareerStage = {
   retirementOtherIncomeAnnual: 0,
 }
 
+const EMPTY_MICRO_CORPORATION: CareerStage = {
+  fromAge: 40,
+  toAge: 64,
+  workStyle: 'micro_corporation',
+  soloGrossRevenueAnnual: 6_000_000,
+  soloBusinessExpenseAnnual: 500_000,
+  bluePenaltyDeduction: 650_000,
+  corporateRevenueAnnual: 4_000_000,
+  corporateExpenseAnnual: 500_000,
+  directorCompensationAnnual: 600_000, // 役員報酬は低く設定（月5万円程度）
+  smallBusinessMutualAnnual: 0,
+  bankruptcyMutualAnnual: 0,
+}
+
 function newStageByWorkStyle(workStyle: WorkStyle): CareerStage {
   if (workStyle === 'employee') return EMPTY_EMPLOYEE
   if (workStyle === 'self_employed') return EMPTY_SELF_EMPLOYED
+  if (workStyle === 'micro_corporation') return EMPTY_MICRO_CORPORATION
   return EMPTY_RETIRED
 }
 
@@ -88,6 +103,7 @@ function CareerStageList({
               >
                 <option value="employee">会社員・パート</option>
                 <option value="self_employed">個人事業主</option>
+                <option value="micro_corporation">マイクロ法人</option>
                 <option value="retired">退職後</option>
               </select>
             </div>
@@ -127,16 +143,68 @@ function CareerStageList({
           )}
 
           {stage.workStyle === 'self_employed' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SliderInput label="年間売上" value={stage.grossRevenueAnnual / 10000}
-                onChange={(v) => onUpdate(i, { grossRevenueAnnual: v * 10000 })}
-                min={0} max={20000} step={100} unit="万円" />
-              <SliderInput label="必要経費" value={stage.businessExpenseAnnual / 10000}
-                onChange={(v) => onUpdate(i, { businessExpenseAnnual: v * 10000 })}
-                min={0} max={10000} step={50} unit="万円" />
-              <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
-                onChange={(v) => onUpdate(i, { bluePenaltyDeduction: v * 10000 })}
-                min={0} max={65} step={10} unit="万円" />
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SliderInput label="年間売上" value={stage.grossRevenueAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { grossRevenueAnnual: v * 10000 })}
+                  min={0} max={20000} step={100} unit="万円" />
+                <SliderInput label="必要経費" value={stage.businessExpenseAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { businessExpenseAnnual: v * 10000 })}
+                  min={0} max={10000} step={50} unit="万円" />
+                <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
+                  onChange={(v) => onUpdate(i, { bluePenaltyDeduction: v * 10000 })}
+                  min={0} max={65} step={10} unit="万円" />
+                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000 * 10000}
+                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v) * 12 })}
+                  min={0} max={7} step={0.5} unit="万円/月" />
+                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000 * 10000}
+                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v) * 12 })}
+                  min={0} max={20} step={1} unit="万円/月" />
+              </div>
+            </div>
+          )}
+
+          {stage.workStyle === 'micro_corporation' && (
+            <div className="space-y-3">
+              <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                <p className="text-xs text-blue-700 font-medium">マイクロ法人とは</p>
+                <p className="text-xs text-blue-600">個人事業と自分が役員の法人を併用する形態。役員報酬を低く設定することで社会保険料（健康保険・厚生年金）を大幅に削減できます。</p>
+              </div>
+              <p className="text-xs font-semibold text-gray-600 mt-1">── 個人事業部分 ──</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SliderInput label="個人事業 年間売上" value={stage.soloGrossRevenueAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { soloGrossRevenueAnnual: v * 10000 })}
+                  min={0} max={20000} step={100} unit="万円" />
+                <SliderInput label="個人事業 必要経費" value={stage.soloBusinessExpenseAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { soloBusinessExpenseAnnual: v * 10000 })}
+                  min={0} max={5000} step={50} unit="万円" />
+                <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
+                  onChange={(v) => onUpdate(i, { bluePenaltyDeduction: v * 10000 })}
+                  min={0} max={65} step={10} unit="万円" />
+              </div>
+              <p className="text-xs font-semibold text-gray-600 mt-1">── 法人部分 ──</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SliderInput label="法人 年間売上" value={stage.corporateRevenueAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { corporateRevenueAnnual: v * 10000 })}
+                  min={0} max={20000} step={100} unit="万円" />
+                <SliderInput label="法人 経費（役員報酬除く）" value={stage.corporateExpenseAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { corporateExpenseAnnual: v * 10000 })}
+                  min={0} max={5000} step={50} unit="万円" />
+                <SliderInput label="役員報酬（年額）" value={stage.directorCompensationAnnual / 10000}
+                  onChange={(v) => onUpdate(i, { directorCompensationAnnual: v * 10000 })}
+                  min={0} max={1200} step={12} unit="万円"
+                />
+              </div>
+              <p className="text-xs text-gray-400">※役員報酬を低く設定すると社会保険料が削減されます（月5〜10万円が目安）。法人税後の利益は留保として試算に含まれます。</p>
+              <p className="text-xs font-semibold text-gray-600 mt-1">── 共済（個人事業主として加入） ──</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000 * 10000}
+                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v) * 12 })}
+                  min={0} max={7} step={0.5} unit="万円/月" />
+                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000 * 10000}
+                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v) * 12 })}
+                  min={0} max={20} step={1} unit="万円/月" />
+              </div>
             </div>
           )}
 
@@ -164,7 +232,7 @@ export function CareerStageEditor() {
   const stages = scenario.careerStages
   const spouseStages = scenario.spouseCareerStages ?? []
   const mutualAid = scenario.mutualAid
-  const hasSelfEmployed = stages.some(s => s.workStyle === 'self_employed')
+  const hasSelfEmployed = stages.some(s => s.workStyle === 'self_employed' || s.workStyle === 'micro_corporation')
   const spouseEnabled = spouseStages.length > 0
 
   const updateMutualAid = (patch: { smallBusinessMutualPayoutMethod?: SmallBusinessMutualPayoutMethod; smallBusinessMutualAnnuityYears?: number }) =>

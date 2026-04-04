@@ -2,6 +2,7 @@ import { Scenario, SimulationResult, AnnualRow, Summary, HousingLoanScheme } fro
 import { calcLoanYear, calcEqualPaymentMonthly, resolveRate } from './loan-calc'
 import {
   calcSoleProprietorTax, calcEmployeeTax, calcRetiredTax,
+  calcMicroCorporationTax,
   calcSmallBusinessMutualLumpSumNet, calcBankruptcyMutualNet,
 } from './tax-calc'
 import { resolveCareerStage } from './career-resolver'
@@ -100,13 +101,14 @@ export function simulate(scenario: Scenario): SimulationResult {
     let smallBusinessMutual = 0
     let bankruptcyMutual = 0
     let mutualAidPayoutNet = 0
+    let socialInsuranceBreakdown: AnnualRow['socialInsuranceBreakdown'] = undefined
     let workStyle: AnnualRow['workStyle'] = 'retired'
 
     if (stage) {
       workStyle = stage.workStyle
 
       // ── 共済廃業処理: 自営業 → 非自営業への移行年 ──
-      if (prevWorkStyle === 'self_employed' && workStyle !== 'self_employed') {
+      if ((prevWorkStyle === 'self_employed' || prevWorkStyle === 'micro_corporation') && workStyle !== 'self_employed' && workStyle !== 'micro_corporation') {
         // 倒産防止共済: 解約手当金（雑所得）を税引き後で受取
         const bankruptcyNet = calcBankruptcyMutualNet(bankruptcyMutualAccumulated)
         // 小規模企業共済: 選択した方法で受取
@@ -150,6 +152,38 @@ export function simulate(scenario: Scenario): SimulationResult {
         residentTax = taxResult.residentTax
         socialInsurance = taxResult.socialInsurance
         pensionContribution = taxResult.pensionContribution
+        socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
+        smallBusinessMutual = effectiveSmallBiz
+        bankruptcyMutual = effectiveBankruptcy
+
+        // 積立額・年数を更新
+        bankruptcyMutualAccumulated += effectiveBankruptcy
+        smallBusinessMutualAccumulated += effectiveSmallBiz
+        if (effectiveSmallBiz > 0) smallBusinessMutualYears++
+      } else if (stage.workStyle === 'micro_corporation') {
+        // 倒産防止共済の実効拠出額（累計800万円上限を適用）
+        const remainingBankruptcyCap = Math.max(0, BANKRUPTCY_MUTUAL_TOTAL_MAX - bankruptcyMutualAccumulated)
+        const effectiveBankruptcy = Math.min(
+          stage.bankruptcyMutualAnnual,
+          BANKRUPTCY_MUTUAL_ANNUAL_MAX,
+          remainingBankruptcyCap,
+        )
+        const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
+
+        const resolvedStage = {
+          ...stage,
+          bankruptcyMutualAnnual: effectiveBankruptcy,
+          smallBusinessMutualAnnual: effectiveSmallBiz,
+        }
+        const taxResult = calcMicroCorporationTax(resolvedStage, effectiveTax)
+        grossIncome = taxResult.grossIncome
+        businessExpenses = taxResult.businessExpenses
+        deductions = taxResult.deductions
+        incomeTax = taxResult.incomeTax
+        residentTax = taxResult.residentTax
+        socialInsurance = taxResult.socialInsurance
+        pensionContribution = taxResult.pensionContribution
+        socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
         smallBusinessMutual = effectiveSmallBiz
         bankruptcyMutual = effectiveBankruptcy
 
@@ -167,6 +201,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
         socialInsurance = taxResult.socialInsurance
+        socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
       } else if (stage.workStyle === 'retired') {
         // 小規模企業共済の分割受取分を年金収入に加算して課税
         const annuityThisYear = annuityBalance > 0 ? Math.min(annuityAnnual, annuityBalance) : 0
@@ -306,6 +341,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       residentTax,
       socialInsurance,
       pensionContribution,
+      socialInsuranceBreakdown,
       smallBusinessMutual,
       bankruptcyMutual,
       mutualAidPayoutNet,

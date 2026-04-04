@@ -21,5 +21,12 @@ export function calcGrossIncome(stage: CareerStage): number {
         stage.retirementEmployeesPensionAnnual +
         stage.retirementOtherIncomeAnnual
       )
+
+    case 'micro_corporation':
+      return (
+        stage.soloGrossRevenueAnnual - stage.soloBusinessExpenseAnnual +
+        stage.directorCompensationAnnual +
+        stage.corporateRevenueAnnual - stage.corporateExpenseAnnual
+      )
   }
 }

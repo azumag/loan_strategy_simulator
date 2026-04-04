@@ -24,6 +24,11 @@ export interface AnnualRow {
   residentTax: number
   socialInsurance: number
   pensionContribution: number
+  socialInsuranceBreakdown?: {
+    healthInsurance: number
+    pension: number
+    employmentInsurance: number
+  }
   smallBusinessMutual: number
   bankruptcyMutual: number
   /** 共済受取額（解約・廃業時の一括or分割入金、税引後） */

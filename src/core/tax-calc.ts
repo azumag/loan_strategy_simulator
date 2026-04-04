@@ -1,4 +1,4 @@
-import { TaxConfig, SelfEmployedStage, EmployeeStage, RetiredStage } from '../types'
+import { TaxConfig, SelfEmployedStage, EmployeeStage, RetiredStage, MicroCorporationStage } from '../types'
 
 export interface TaxResult {
   grossIncome: number
@@ -11,6 +11,105 @@ export interface TaxResult {
   smallBusinessMutual: number
   bankruptcyMutual: number
   totalTaxBurden: number
+  // 社会保険内訳（任意）
+  socialInsuranceBreakdown?: {
+    healthInsurance: number   // 健康保険 or 国民健康保険
+    pension: number           // 厚生年金 or 国民年金
+    employmentInsurance: number // 雇用保険（自営業は0）
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 社会保険料計算ヘルパー
+// ---------------------------------------------------------------------------
+
+/**
+ * 標準報酬月額テーブル（健康保険・協会けんぽ 50等級、2024年度）
+ * 各エントリ: [標準報酬月額, 報酬月額の下限]
+ */
+const STANDARD_MONTHLY_REMUNERATION_TABLE: [number, number][] = [
+  [58_000, 0],       [68_000, 63_000],  [78_000, 73_000],  [88_000, 83_000],
+  [98_000, 93_000],  [104_000, 101_000],[110_000, 107_000],[118_000, 114_000],
+  [126_000, 122_000],[134_000, 130_000],[142_000, 138_000],[150_000, 146_000],
+  [160_000, 155_000],[170_000, 165_000],[180_000, 175_000],[190_000, 185_000],
+  [200_000, 195_000],[220_000, 210_000],[240_000, 230_000],[260_000, 250_000],
+  [280_000, 270_000],[300_000, 290_000],[320_000, 310_000],[340_000, 330_000],
+  [360_000, 350_000],[380_000, 370_000],[410_000, 395_000],[440_000, 425_000],
+  [470_000, 455_000],[500_000, 485_000],[530_000, 515_000],[560_000, 545_000],
+  [590_000, 575_000],[620_000, 605_000],[650_000, 635_000],[680_000, 665_000],
+  [710_000, 695_000],[750_000, 730_000],[830_000, 790_000],[910_000, 870_000],
+  [1_000_000, 950_000],[1_090_000, 1_045_000],[1_190_000, 1_135_000],[1_390_000, 1_240_000],
+]
+// 厚生年金の上限等級: 標準報酬月額 650,000円
+const KOSEI_NENKIN_CAP_GRADE = 650_000
+
+/**
+ * 月額報酬から標準報酬月額を返す
+ */
+function getStandardMonthlyRemuneration(monthlySalary: number): number {
+  for (let i = STANDARD_MONTHLY_REMUNERATION_TABLE.length - 1; i >= 0; i--) {
+    if (monthlySalary >= STANDARD_MONTHLY_REMUNERATION_TABLE[i][1]) {
+      return STANDARD_MONTHLY_REMUNERATION_TABLE[i][0]
+    }
+  }
+  return STANDARD_MONTHLY_REMUNERATION_TABLE[0][0]
+}
+
+/**
+ * 会社員の社会保険料計算（標準報酬月額テーブル基準）
+ * @param annualSalary 年間額面給与（ボーナス込み）
+ * @returns { healthInsurance, pension, employmentInsurance, total }
+ */
+export function calcEmployeeSocialInsurance(annualSalary: number): {
+  healthInsurance: number
+  pension: number
+  employmentInsurance: number
+  total: number
+} {
+  // 月額報酬（ボーナス込みで年額→月額換算）
+  const monthlySalary = annualSalary / 12
+  const stdMonthly = getStandardMonthlyRemuneration(monthlySalary)
+
+  // 健康保険: 協会けんぽ（東京都2024年度）被保険者負担率 4.985%
+  const healthInsuranceMonthly = Math.floor(stdMonthly * 0.04985)
+  const healthInsurance = healthInsuranceMonthly * 12
+
+  // 厚生年金: 被保険者負担率 9.15%、上限650,000円
+  const pensionStdMonthly = Math.min(stdMonthly, KOSEI_NENKIN_CAP_GRADE)
+  const pensionMonthly = Math.floor(pensionStdMonthly * 0.0915)
+  const pension = pensionMonthly * 12
+
+  // 雇用保険: 0.6%（実際の給与ベース）
+  const employmentInsurance = Math.floor(annualSalary * 0.006)
+
+  const total = healthInsurance + pension + employmentInsurance
+  return { healthInsurance, pension, employmentInsurance, total }
+}
+
+/**
+ * 個人事業主の社会保険料計算
+ * @param netBusinessIncome 事業所得（売上 - 経費）
+ * @returns { healthInsurance, pension, total }
+ */
+export function calcSelfEmployedSocialInsurance(netBusinessIncome: number): {
+  healthInsurance: number
+  pension: number
+  total: number
+} {
+  // 国民健康保険（全国平均的な計算）
+  // 所得割: (所得 - 基礎控除430,000) × 8.5% 程度
+  // 均等割: 50,000円 程度（世帯1人）
+  // 上限: 1,020,000円（2024年度）
+  const nhiBase = Math.max(0, netBusinessIncome - 430_000)
+  const nhiIncomeLevy = Math.floor(nhiBase * 0.085)
+  const nhiPerCapita = 50_000
+  const healthInsurance = Math.min(nhiIncomeLevy + nhiPerCapita, 1_020_000)
+
+  // 国民年金: 月額16,980円（2024年度）× 12ヶ月
+  const pension = 16_980 * 12 // 203,760円
+
+  const total = healthInsurance + pension
+  return { healthInsurance, pension, total }
 }
 
 /**
@@ -50,15 +149,9 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
   const grossIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual + stage.sideIncomeAnnual
   const businessExpenses = stage.businessExpenseAnnual
 
-  // 国民健康保険: 事業所得の約10%を概算（所得割+均等割、上限考慮）
-  const nationalHealthInsurance = Math.min(
-    Math.max(0, (stage.grossRevenueAnnual - stage.businessExpenseAnnual) * 0.1),
-    1_020_000, // 上限概算
-  )
-  // 国民年金
-  const nationalPension = 199_320 // 2024年度
-
-  const socialInsurance = nationalHealthInsurance + nationalPension
+  const netBusinessIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual
+  const { healthInsurance: nationalHealthInsurance, pension: nationalPension, total: socialInsurance } =
+    calcSelfEmployedSocialInsurance(netBusinessIncome)
 
   // 課税所得計算
   const totalDeductions =
@@ -96,6 +189,11 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
     smallBusinessMutual: stage.smallBusinessMutualAnnual,
     bankruptcyMutual: stage.bankruptcyMutualAnnual,
     totalTaxBurden,
+    socialInsuranceBreakdown: {
+      healthInsurance: nationalHealthInsurance,
+      pension: nationalPension,
+      employmentInsurance: 0,
+    },
   }
 }
 
@@ -129,9 +227,9 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     }
   }
 
-  // 社会保険概算: 額面×15%（健康保険+厚生年金+雇用保険）
-  const socialInsuranceRate = 0.15
-  const socialInsurance = Math.min(grossSalary * socialInsuranceRate, 1_500_000)
+  // 社会保険: 標準報酬月額テーブルに基づく計算
+  const siBreakdown = calcEmployeeSocialInsurance(grossSalary)
+  const socialInsurance = siBreakdown.total
 
   // 給与所得控除
   const employmentDeduction = calcEmploymentIncomeDeduction(grossSalary)
@@ -164,6 +262,11 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     smallBusinessMutual: 0,
     bankruptcyMutual: 0,
     totalTaxBurden,
+    socialInsuranceBreakdown: {
+      healthInsurance: siBreakdown.healthInsurance,
+      pension: siBreakdown.pension,
+      employmentInsurance: siBreakdown.employmentInsurance,
+    },
   }
 }
 
@@ -213,6 +316,98 @@ export function calcRetiredTax(stage: RetiredStage, tax: TaxConfig): TaxResult {
     smallBusinessMutual: 0,
     bankruptcyMutual: 0,
     totalTaxBurden,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 法人税計算ヘルパー
+// ---------------------------------------------------------------------------
+
+/**
+ * 法人税等の実効税率（中小企業 簡易版）
+ * 所得 800万円以下: ~21%（法人税15% + 地方税等）
+ * 所得 800万円超:  ~34%（法人税23.2% + 地方税等）
+ */
+export function calcCorporateTax(corporateIncome: number): number {
+  if (corporateIncome <= 0) return 0
+  const LOW_RATE_THRESHOLD = 8_000_000
+  if (corporateIncome <= LOW_RATE_THRESHOLD) {
+    return Math.floor(corporateIncome * 0.21)
+  }
+  return Math.floor(LOW_RATE_THRESHOLD * 0.21 + (corporateIncome - LOW_RATE_THRESHOLD) * 0.34)
+}
+
+/**
+ * マイクロ法人（個人事業 + 自己法人役員）の税・社会保険計算
+ *
+ * ポイント:
+ * - 社会保険料は役員報酬ベースの標準報酬月額で計算（大幅削減可能）
+ * - 個人所得 = 個人事業所得 + 役員報酬（給与所得控除適用）
+ * - 法人所得 = 法人売上 - 法人経費 - 役員報酬 → 法人税適用
+ * - 法人税後の法人利益は留保（シミュレーション上は個人収入に加算して扱う）
+ */
+export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxConfig): TaxResult & { corporateTax: number; corporateRetainedEarnings: number } {
+  // ── 個人事業所得 ──
+  const soloNetIncome = stage.soloGrossRevenueAnnual - stage.soloBusinessExpenseAnnual
+
+  // ── 役員報酬（給与所得控除を適用） ──
+  const directorCompensation = stage.directorCompensationAnnual
+  const employmentDeduction = calcEmploymentIncomeDeduction(directorCompensation)
+  const directorNetIncome = Math.max(0, directorCompensation - employmentDeduction)
+
+  // ── 社会保険: 役員報酬ベースの標準報酬月額で計算（節約の核心） ──
+  const siBreakdown = calcEmployeeSocialInsurance(directorCompensation)
+  const socialInsurance = siBreakdown.total
+
+  // ── 法人側 ──
+  const corporateProfit = stage.corporateRevenueAnnual - stage.corporateExpenseAnnual - directorCompensation
+  const corporateTax = calcCorporateTax(Math.max(0, corporateProfit))
+  const corporateRetainedEarnings = Math.max(0, corporateProfit) - corporateTax
+
+  // ── 個人所得控除の合計 ──
+  const totalDeductions =
+    tax.basicDeductionAnnual +
+    stage.bluePenaltyDeduction +
+    stage.smallBusinessMutualAnnual +
+    Math.min(stage.bankruptcyMutualAnnual, 2_400_000) +
+    socialInsurance +
+    tax.spouseDeductionAnnual +
+    tax.dependentDeductionAnnual +
+    tax.lifeInsuranceDeductionAnnual +
+    tax.earthquakeInsuranceDeductionAnnual +
+    tax.medicalDeductionAnnual +
+    tax.otherDeductionAnnual
+
+  // 課税所得 = 個人事業所得 + 役員報酬(給与所得控除後) - 所得控除
+  const taxableIncome = Math.max(0, soloNetIncome + directorNetIncome - totalDeductions)
+  const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
+  const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000)
+
+  // 個人事業税（個人事業所得290万超の部分×5%）
+  const businessTaxBase = Math.max(0, soloNetIncome - 2_900_000)
+  const businessTax = businessTaxBase * 0.05
+
+  const grossIncome = soloNetIncome + directorCompensation + corporateRetainedEarnings
+  const totalTaxBurden = incomeTax + residentTax + businessTax + socialInsurance + corporateTax
+
+  return {
+    grossIncome,
+    businessExpenses: stage.soloBusinessExpenseAnnual + stage.corporateExpenseAnnual,
+    deductions: totalDeductions,
+    incomeTax,
+    residentTax: residentTax + businessTax,
+    socialInsurance: siBreakdown.healthInsurance,
+    pensionContribution: siBreakdown.pension,
+    smallBusinessMutual: stage.smallBusinessMutualAnnual,
+    bankruptcyMutual: stage.bankruptcyMutualAnnual,
+    totalTaxBurden,
+    socialInsuranceBreakdown: {
+      healthInsurance: siBreakdown.healthInsurance,
+      pension: siBreakdown.pension,
+      employmentInsurance: siBreakdown.employmentInsurance,
+    },
+    corporateTax,
+    corporateRetainedEarnings,
   }
 }
 

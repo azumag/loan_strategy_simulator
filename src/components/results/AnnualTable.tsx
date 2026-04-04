@@ -42,7 +42,16 @@ function DetailPanel({ row }: { row: AnnualRow }) {
 
   const monthlyItems = [
     { label: '収入', value: fmtM(row.grossIncome), color: 'text-green-700' },
-    { label: '税・社保', value: `-${fmtM(totalTax)}`, color: 'text-orange-600' },
+    { label: '所得税', value: `-${fmtM(row.incomeTax)}`, color: 'text-orange-500' },
+    { label: '住民税', value: `-${fmtM(row.residentTax)}`, color: 'text-orange-500' },
+    ...(row.socialInsuranceBreakdown ? [
+      { label: '健康保険', value: `-${fmtM(row.socialInsuranceBreakdown.healthInsurance)}`, color: 'text-orange-400' },
+      { label: '年金', value: `-${fmtM(row.socialInsuranceBreakdown.pension + row.pensionContribution)}`, color: 'text-orange-400' },
+      ...(row.socialInsuranceBreakdown.employmentInsurance > 0 ? [{ label: '雇用保険', value: `-${fmtM(row.socialInsuranceBreakdown.employmentInsurance)}`, color: 'text-orange-400' }] : []),
+    ] : [
+      { label: '社会保険', value: `-${fmtM(row.socialInsurance + row.pensionContribution)}`, color: 'text-orange-400' },
+    ]),
+    { label: '税・社保 合計', value: `-${fmtM(totalTax)}`, color: 'text-orange-600 font-medium' },
     { label: 'ローン返済', value: `-${fmtM(row.loanRepaymentAnnual)}`, color: 'text-red-600' },
     { label: '住宅費', value: `-${fmtM(row.housingTaxAnnual)}`, color: 'text-red-500' },
     { label: '生活費', value: `-${fmtM(row.livingCostAnnual)}`, color: 'text-red-500' },
