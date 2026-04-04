@@ -76,4 +76,8 @@ export const DEFAULT_SCENARIO: Scenario = {
     targetPayoffAge: 75,
     stopPrepaymentIfCashBelowBuffer: true,
   },
+  mutualAid: {
+    smallBusinessMutualPayoutMethod: 'lump_sum',
+    smallBusinessMutualAnnuityYears: 10,
+  },
 }

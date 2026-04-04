@@ -23,7 +23,7 @@ export function BasicConditionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">最低現金バッファ（万円）</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">手元に残したい最低現金額（万円）</label>
           <input
             type="number"
             value={sc.minimumCashBuffer / 10000}
@@ -67,6 +67,10 @@ export function BasicConditionForm() {
             min={0}
             step={0.1}
           />
+          <p className="text-xs text-gray-600 mt-2">
+            毎年の流動資産に適用される複利計算。例）3% なら、流動資産が毎年 1.03 倍に増える。<br />
+            対象: 初期流動資産のみ。手元現金には適用されません。
+          </p>
         </div>
 
         <div>
@@ -79,6 +83,10 @@ export function BasicConditionForm() {
             min={0}
             step={0.1}
           />
+          <p className="text-xs text-gray-600 mt-2">
+            生活費が年々増加するという想定を反映。<br />
+            例）開始年齢 40 歳、インフレ率 2%、50 歳時点なら生活費が約 21.9% 増加。
+          </p>
         </div>
       </div>
     </div>

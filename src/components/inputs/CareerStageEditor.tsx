@@ -1,5 +1,5 @@
 import { useScenario } from '../../store/scenario-store'
-import { CareerStage, WorkStyle } from '../../types'
+import { CareerStage, WorkStyle, SmallBusinessMutualPayoutMethod } from '../../types'
 
 const EMPTY_EMPLOYEE: CareerStage = {
   fromAge: 40,
@@ -19,6 +19,7 @@ const EMPTY_SELF_EMPLOYED: CareerStage = {
   businessExpenseAnnual: 1_000_000,
   bluePenaltyDeduction: 650_000,
   smallBusinessMutualAnnual: 0,
+  bankruptcyMutualAnnual: 0,
   sideIncomeAnnual: 0,
 }
 
@@ -40,6 +41,11 @@ function newStageByWorkStyle(workStyle: WorkStyle): CareerStage {
 export function CareerStageEditor() {
   const { scenario, dispatch } = useScenario()
   const stages = scenario.careerStages
+  const mutualAid = scenario.mutualAid
+  const hasSelfEmployed = stages.some(s => s.workStyle === 'self_employed')
+
+  const updateMutualAid = (patch: { smallBusinessMutualPayoutMethod?: SmallBusinessMutualPayoutMethod; smallBusinessMutualAnnuityYears?: number }) =>
+    dispatch({ type: 'UPDATE_MUTUAL_AID', payload: patch })
 
   const updateStage = (index: number, patch: Partial<CareerStage>) => {
     const updated = stages.map((s, i) => i === index ? { ...s, ...patch } as CareerStage : s)
@@ -188,6 +194,15 @@ export function CareerStageEditor() {
                   className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                 />
               </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">倒産防止共済（万円）</label>
+                <input
+                  type="number"
+                  value={stage.bankruptcyMutualAnnual / 10000}
+                  onChange={(e) => updateStage(i, { bankruptcyMutualAnnual: Number(e.target.value) * 10000 })}
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+              </div>
             </div>
           )}
 
@@ -224,6 +239,67 @@ export function CareerStageEditor() {
           )}
         </div>
       ))}
+
+      {hasSelfEmployed && (
+        <div className="border border-indigo-200 bg-indigo-50 rounded-lg p-4 space-y-4">
+          <h3 className="text-sm font-semibold text-indigo-800">共済の受け取り設定（廃業・移行時）</h3>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-medium text-gray-700 mb-1">倒産防止共済（経営セーフティ共済）</p>
+              <p className="text-xs text-gray-500">
+                解約手当金として一括受取のみ。累計上限800万円。掛金は経費算入済みのため、
+                受取額は雑所得として課税（シミュレーションでは実効税率20%で概算）。
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium text-gray-700 mb-1">小規模企業共済</p>
+              <div className="flex items-center gap-4 mt-1">
+                <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    name="sbm-payout"
+                    value="lump_sum"
+                    checked={mutualAid.smallBusinessMutualPayoutMethod === 'lump_sum'}
+                    onChange={() => updateMutualAid({ smallBusinessMutualPayoutMethod: 'lump_sum' })}
+                  />
+                  一括受取（退職所得）
+                </label>
+                <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    name="sbm-payout"
+                    value="annuity"
+                    checked={mutualAid.smallBusinessMutualPayoutMethod === 'annuity'}
+                    onChange={() => updateMutualAid({ smallBusinessMutualPayoutMethod: 'annuity' })}
+                  />
+                  分割受取（年金所得）
+                </label>
+              </div>
+              {mutualAid.smallBusinessMutualPayoutMethod === 'lump_sum' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  退職所得控除（加入年数×40万円、20年超は+70万円/年）を適用後、1/2課税。
+                </p>
+              )}
+              {mutualAid.smallBusinessMutualPayoutMethod === 'annuity' && (
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-xs text-gray-600">分割年数</label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={20}
+                    value={mutualAid.smallBusinessMutualAnnuityYears}
+                    onChange={(e) => updateMutualAid({ smallBusinessMutualAnnuityYears: Math.min(20, Math.max(10, Number(e.target.value))) })}
+                    className="w-16 border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                  />
+                  <span className="text-xs text-gray-500">年（10〜20）。公的年金等の雑所得として課税。</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

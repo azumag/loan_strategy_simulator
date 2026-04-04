@@ -69,6 +69,10 @@ export function LoanConditionForm() {
             <option value="equal_payment">元利均等返済</option>
             <option value="equal_principal">元金均等返済</option>
           </select>
+          <div className="text-xs text-gray-600 mt-2 space-y-1">
+            <p><strong>元利均等返済</strong>: 毎月の返済額が一定。初期は利息が多く、後期は元金が多くなる。返済計画が立てやすい。</p>
+            <p><strong>元金均等返済</strong>: 毎月の元金返済が一定。初期の返済額が高く、時間とともに減少。利息負担が少ない。</p>
+          </div>
         </div>
       </div>
 

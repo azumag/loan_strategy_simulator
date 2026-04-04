@@ -87,11 +87,28 @@
 | シナリオ名 | `scenario.name` | string | 任意 | 保存用名称 |
 | シミュレーション開始年齢 | `scenario.startAge` | number | 必須 | 例: 40 |
 | シミュレーション終了年齢 | `scenario.endAge` | number | 必須 | 例: 90 |
-| 最低現金バッファ | `scenario.minimumCashBuffer` | number | 必須 | 手元に残したい最低現金 |
+| 手元に残したい最低現金額 | `scenario.minimumCashBuffer` | number | 必須 | 手元に残したい最低現金 |
 | 運用利回り | `scenario.investmentReturnRate` | number | 任意 | 資産運用の年利想定 |
 | インフレ率 | `scenario.inflationRate` | number | 任意 | 生活費上昇の概算率 |
 
 ### 補足
+
+#### 運用利回りの計算方法
+- 毎年の流動資産に適用される複利計算
+- 例）運用利回り 3% なら、流動資産が毎年 1.03 倍に増える
+- **対象資産**: 初期流動資産 (`assets.initialLiquidAssets`) に対してのみ適用
+- **非対象**: 手元現金 (`assets.initialCash`) には適用されません
+
+#### インフレ率の計算方法
+- 生活費が年々増加するという想定を反映
+- シミュレーション開始から経過した年数分、複利的に値上げ
+- 計算式: `生活費 × (1 + インフレ率)^(経過年数)`
+- 例）開始年齢 40 歳、インフレ率 2%、50 歳時点なら：
+  - 経過年数 = 10 年
+  - `inflationFactor = (1.02)^10 ≈ 1.219`
+  - 生活費が約 21.9% 増加
+
+#### その他
 - `startAge` はローン開始年齢と一致しなくてもよい
 - `endAge` は老後まで含めて確認できる年齢とする
 

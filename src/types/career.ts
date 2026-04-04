@@ -14,6 +14,7 @@ export interface SelfEmployedStage extends BaseCareerStage {
   businessExpenseAnnual: number
   bluePenaltyDeduction: number
   smallBusinessMutualAnnual: number
+  bankruptcyMutualAnnual: number
   sideIncomeAnnual: number
 }
 

@@ -9,13 +9,14 @@ export interface TaxResult {
   socialInsurance: number
   pensionContribution: number
   smallBusinessMutual: number
+  bankruptcyMutual: number
   totalTaxBurden: number
 }
 
 /**
  * 所得税速算表（2024年基準）
  */
-function calcIncomeTax(taxableIncome: number): number {
+export function calcIncomeTax(taxableIncome: number): number {
   if (taxableIncome <= 0) return 0
   const brackets = [
     { limit: 1_950_000, rate: 0.05, deduction: 0 },
@@ -64,6 +65,7 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
     tax.basicDeductionAnnual +
     stage.bluePenaltyDeduction +
     stage.smallBusinessMutualAnnual +
+    Math.min(stage.bankruptcyMutualAnnual, 2_400_000) +
     socialInsurance +
     tax.spouseDeductionAnnual +
     tax.dependentDeductionAnnual +
@@ -92,6 +94,7 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
     socialInsurance: nationalHealthInsurance,
     pensionContribution: nationalPension,
     smallBusinessMutual: stage.smallBusinessMutualAnnual,
+    bankruptcyMutual: stage.bankruptcyMutualAnnual,
     totalTaxBurden,
   }
 }
@@ -121,6 +124,7 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
       socialInsurance: 0,
       pensionContribution: 0,
       smallBusinessMutual: 0,
+      bankruptcyMutual: 0,
       totalTaxBurden: 0,
     }
   }
@@ -158,6 +162,7 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     socialInsurance,
     pensionContribution: 0,
     smallBusinessMutual: 0,
+    bankruptcyMutual: 0,
     totalTaxBurden,
   }
 }
@@ -206,6 +211,33 @@ export function calcRetiredTax(stage: RetiredStage, tax: TaxConfig): TaxResult {
     socialInsurance: healthInsurance,
     pensionContribution: 0,
     smallBusinessMutual: 0,
+    bankruptcyMutual: 0,
     totalTaxBurden,
   }
+}
+
+/**
+ * 小規模企業共済の一括受取（退職所得）の税引後手取り額を計算
+ * @param accumulated 積立総額
+ * @param years 加入年数（掛金払込年数の近似）
+ */
+export function calcSmallBusinessMutualLumpSumNet(accumulated: number, years: number): number {
+  if (accumulated <= 0) return 0
+  const deduction = years <= 20
+    ? Math.max(800_000, years * 400_000)
+    : 8_000_000 + (years - 20) * 700_000
+  const taxableRetirementIncome = Math.max(0, accumulated - deduction) / 2
+  const incomeTax = calcIncomeTax(taxableRetirementIncome)
+  const residentTax = Math.floor(taxableRetirementIncome * 0.1)
+  return Math.max(0, accumulated - incomeTax - residentTax)
+}
+
+/**
+ * 倒産防止共済の解約手当金の税引後手取り額を計算
+ * 掛金は経費算入済みのため受取額は雑所得として全額課税。
+ * 退職後（年金所得のみ）での受取を想定し実効税率20%で概算。
+ */
+export function calcBankruptcyMutualNet(accumulated: number): number {
+  if (accumulated <= 0) return 0
+  return Math.floor(accumulated * 0.80) // 実効税率20%概算
 }

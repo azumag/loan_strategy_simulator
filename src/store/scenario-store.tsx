@@ -13,6 +13,7 @@ type ScenarioAction =
   | { type: 'UPDATE_ASSETS'; payload: Partial<Scenario['assets']> }
   | { type: 'UPDATE_EVENTS'; payload: Scenario['events'] }
   | { type: 'UPDATE_STRATEGY'; payload: Partial<Scenario['strategy']> }
+  | { type: 'UPDATE_MUTUAL_AID'; payload: Partial<Scenario['mutualAid']> }
   | { type: 'RESET' }
   | { type: 'LOAD'; payload: Scenario }
 
@@ -36,6 +37,8 @@ function scenarioReducer(state: Scenario, action: ScenarioAction): Scenario {
       return { ...state, events: action.payload }
     case 'UPDATE_STRATEGY':
       return { ...state, strategy: { ...state.strategy, ...action.payload } }
+    case 'UPDATE_MUTUAL_AID':
+      return { ...state, mutualAid: { ...state.mutualAid, ...action.payload } }
     case 'RESET':
       return DEFAULT_SCENARIO
     case 'LOAD':
