@@ -5,10 +5,7 @@ import { AnnualRow } from '../../types'
 const fmt = (n: number) => Math.round(n / 10000).toLocaleString()
 const fmtM = (n: number) => Math.round(n / 10000 / 12 * 10) / 10  // 月次（小数1桁）
 
-function rowClass(row: AnnualRow, firstShortageAge: number | null, payoffAge: number | null) {
-  if (row.endingCash < 0 || (firstShortageAge !== null && row.age >= firstShortageAge && row.endingCash < 0)) {
-    return 'bg-red-50'
-  }
+function rowClass(row: AnnualRow, payoffAge: number | null) {
   if (row.age === 60 || row.age === 65 || row.age === payoffAge) {
     return 'bg-blue-50 font-semibold'
   }
@@ -154,14 +151,13 @@ export function AnnualTable() {
             {rows.map((row) => {
               const totalTax = row.incomeTax + row.residentTax + row.socialInsurance + row.pensionContribution
               const isHighlight = row.age === 60 || row.age === 65 || row.age === summary.payoffAge
-              const isShortage = row.endingCash < 0
               const isExpanded = expandedAge === row.age
 
               return (
                 <>
                   <tr
                     key={row.age}
-                    className={`border-t border-gray-100 cursor-pointer hover:brightness-95 transition-all ${rowClass(row, summary.firstShortageAge, summary.payoffAge)} ${isHighlight ? 'border-l-4 border-l-blue-400' : ''} ${isExpanded ? 'border-b-0' : ''}`}
+                    className={`border-t border-gray-100 cursor-pointer hover:brightness-95 transition-all ${rowClass(row, summary.payoffAge)} ${isHighlight ? 'border-l-4 border-l-blue-400' : ''} ${isExpanded ? 'border-b-0' : ''}`}
                     onClick={() => setExpandedAge(isExpanded ? null : row.age)}
                   >
                     <td className="px-3 py-1.5 whitespace-nowrap">
@@ -184,8 +180,8 @@ export function AnnualTable() {
                     <td className="px-3 py-1.5 text-right text-blue-600">
                       {row.investmentContribution > 0 ? fmt(row.investmentContribution) : '-'}
                     </td>
-                    <td className={`px-3 py-1.5 text-right font-semibold ${isShortage ? 'text-red-700' : 'text-gray-900'}`}>
-                      {isShortage ? '⚠ ' : ''}{fmt(row.endingCash)}
+                    <td className="px-3 py-1.5 text-right font-semibold text-gray-900">
+                      {fmt(row.endingCash)}
                     </td>
                     <td className="px-3 py-1.5 text-right text-green-700">
                       {row.endingNisaBalance > 0 ? fmt(row.endingNisaBalance) : '-'}
