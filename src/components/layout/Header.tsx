@@ -101,8 +101,8 @@ function ScenarioMenu() {
                   {savedList.map((s) => (
                     <li
                       key={s.id}
-                      onClick={() => s.id !== activeId && handleLoad(s.id)}
-                      className={`text-xs px-2 py-1.5 rounded truncate cursor-pointer transition-colors ${s.id === activeId ? 'bg-blue-50 text-blue-700 font-semibold cursor-default' : 'text-gray-700 bg-gray-50 hover:bg-blue-50 hover:text-blue-700'}`}
+                      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleLoad(s.id) }}
+                      className={`text-xs px-2 py-1.5 rounded truncate cursor-pointer transition-colors select-none ${s.id === activeId ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 bg-gray-50 hover:bg-blue-50 hover:text-blue-700'}`}
                     >
                       {s.id === activeId && '● '}{s.name || '（名称未設定）'}
                     </li>

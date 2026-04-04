@@ -9,6 +9,7 @@ export type StepId =
   | 'events'
   | 'prepayment'
   | 'result'
+  | 'data'
 
 export const STEPS: { id: StepId; label: string; shortLabel: string }[] = [
   { id: 'basic', label: '基本条件', shortLabel: '基本' },
@@ -21,6 +22,7 @@ export const STEPS: { id: StepId; label: string; shortLabel: string }[] = [
   { id: 'events', label: 'イベント', shortLabel: 'イベント' },
   { id: 'prepayment', label: '繰上返済', shortLabel: '繰上' },
   { id: 'result', label: '結果', shortLabel: '結果' },
+  { id: 'data', label: 'データ管理', shortLabel: 'データ' },
 ]
 
 interface StepNavigationProps {
