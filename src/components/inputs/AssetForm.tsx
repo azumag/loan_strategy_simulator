@@ -113,6 +113,51 @@ export function AssetForm() {
           ※ 積立はキャッシュフローから差し引かれます。現金残高が不足する場合は積立を抑制します。
         </p>
       </div>
+
+      {/* 退職後の資産取り崩し */}
+      <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-orange-800">退職後の資産取り崩し</h3>
+        <SliderInput
+          label="年間取り崩し額"
+          value={(assets.annualRetirementDrawdown ?? 0) / 10000}
+          onChange={(v) => update('annualRetirementDrawdown', v * 10000)}
+          min={0} max={500} step={10} unit="万円/年"
+        />
+        <p className="text-xs text-orange-700">
+          ※ 退職後（退職後ステージ）に毎年この金額を投資口座から現金へ移します。NISAから優先して引き出し、残りを課税口座から補完します。
+        </p>
+      </div>
+
+      {/* 個別株配当シミュレーション */}
+      <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-yellow-800">個別株配当シミュレーション</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SliderInput
+            label="NISA口座の個別株比率"
+            value={Math.round((assets.nisaStockRatio ?? 0) * 100)}
+            onChange={(v) => update('nisaStockRatio', v / 100)}
+            min={0} max={100} step={5} unit="%"
+            note="NISAのうち個別株に投資している割合"
+          />
+          <SliderInput
+            label="課税口座の個別株比率"
+            value={Math.round((assets.liquidStockRatio ?? 0) * 100)}
+            onChange={(v) => update('liquidStockRatio', v / 100)}
+            min={0} max={100} step={5} unit="%"
+            note="課税口座のうち個別株に投資している割合"
+          />
+          <SliderInput
+            label="個別株配当利回り"
+            value={Math.round((assets.stockDividendYield ?? 0.03) * 1000) / 10}
+            onChange={(v) => update('stockDividendYield', v / 100)}
+            min={0} max={10} step={0.1} unit="%"
+            note="年間配当利回り（株価上昇分は総利回りから配当利回りを差し引いた分）"
+          />
+        </div>
+        <p className="text-xs text-yellow-700">
+          ※ NISA配当は非課税で現金流入。課税口座配当は20.315%源泉徴収後に現金流入。インデックス部分は配当再投資として残高に反映されます。
+        </p>
+      </div>
     </div>
   )
 }

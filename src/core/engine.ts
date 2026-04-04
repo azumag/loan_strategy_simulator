@@ -102,6 +102,8 @@ export function simulate(scenario: Scenario): SimulationResult {
     let bankruptcyMutual = 0
     let mutualAidPayoutNet = 0
     let socialInsuranceBreakdown: AnnualRow['socialInsuranceBreakdown'] = undefined
+    let retirementDrawdown = 0
+    let dividendIncome = 0
     let workStyle: AnnualRow['workStyle'] = 'retired'
 
     if (stage) {
@@ -290,6 +292,19 @@ export function simulate(scenario: Scenario): SimulationResult {
     // 9. 現金・資産更新
     cash += netCashflow
 
+    // 9b. 退職後の資産取り崩し（NISA → 課税口座 の優先順）
+    const annualDrawdown = assets.annualRetirementDrawdown ?? 0
+    retirementDrawdown = 0
+    if (workStyle === 'retired' && annualDrawdown > 0) {
+      const fromNisa = Math.min(annualDrawdown, nisaBalance)
+      nisaBalance -= fromNisa
+      retirementDrawdown += fromNisa
+      const fromLiquid = Math.min(annualDrawdown - fromNisa, liquidAssets)
+      liquidAssets -= fromLiquid
+      retirementDrawdown += fromLiquid
+      cash += retirementDrawdown
+    }
+
     // 投資積立（現金 → 投資口座への移動）
     const annualNisaContrib = assets.annualNisaContribution ?? 0
     const annualTaxableContrib = assets.annualSavingsContribution ?? 0
@@ -308,10 +323,29 @@ export function simulate(scenario: Scenario): SimulationResult {
 
     const investmentContribution = effectiveNisaContrib + effectiveTaxableContrib
 
-    // 資産運用利回り適用
-    if (sc.investmentReturnRate > 0) {
-      nisaBalance *= (1 + sc.investmentReturnRate)         // NISA: 非課税（全額）
-      liquidAssets *= (1 + sc.investmentReturnRate)        // 課税口座: 利回り適用（売却時課税は簡略化）
+    // 資産運用利回り適用（個別株配当を分離）
+    const nisaStockRatio = assets.nisaStockRatio ?? 0
+    const liquidStockRatio = assets.liquidStockRatio ?? 0
+    const stockDividendYield = assets.stockDividendYield ?? 0.03
+    const DIVIDEND_TAX_RATE = 0.20315
+    dividendIncome = 0
+
+    if (sc.investmentReturnRate > 0 || (stockDividendYield > 0 && (nisaStockRatio > 0 || liquidStockRatio > 0))) {
+      // NISA口座: インデックス部分は総利回り、個別株部分は株価上昇のみ（配当は現金へ）
+      const nisaIndex = nisaBalance * (1 - nisaStockRatio)
+      const nisaStock = nisaBalance * nisaStockRatio
+      nisaBalance = nisaIndex * (1 + sc.investmentReturnRate)
+                 + nisaStock * (1 + sc.investmentReturnRate - stockDividendYield)
+      dividendIncome += nisaStock * stockDividendYield  // NISA配当は非課税
+
+      // 課税口座: 同様に分離
+      const liquidIndex = liquidAssets * (1 - liquidStockRatio)
+      const liquidStock = liquidAssets * liquidStockRatio
+      liquidAssets = liquidIndex * (1 + sc.investmentReturnRate)
+                  + liquidStock * (1 + sc.investmentReturnRate - stockDividendYield)
+      dividendIncome += liquidStock * stockDividendYield * (1 - DIVIDEND_TAX_RATE)  // 20.315%源泉徴収後
+
+      cash += dividendIncome
     }
 
     // 10. 繰上返済
@@ -353,6 +387,8 @@ export function simulate(scenario: Scenario): SimulationResult {
       specialCashflow,
       netCashflow,
       investmentContribution,
+      retirementDrawdown,
+      dividendIncome,
       endingCash: cash,
       endingNisaBalance: nisaBalance,
       endingLiquidAssets: liquidAssets,

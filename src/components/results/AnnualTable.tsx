@@ -53,6 +53,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
     { label: '住宅費', value: `-${fmtM(row.housingTaxAnnual)}`, color: 'text-red-500' },
     { label: '生活費', value: `-${fmtM(row.livingCostAnnual)}`, color: 'text-red-500' },
     { label: '投資積立', value: row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-', color: 'text-blue-600' },
+    ...(row.retirementDrawdown > 0 ? [
+      { label: '資産取り崩し', value: `+${fmtM(row.retirementDrawdown)}`, color: 'text-orange-600' },
+    ] : []),
+    ...(row.dividendIncome > 0 ? [
+      { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
+    ] : []),
     {
       label: '月次収支',
       value: `${fmtM(row.netCashflow) >= 0 ? '+' : ''}${fmtM(row.netCashflow)}`,
@@ -115,7 +121,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   )
 }
 
-const COL_COUNT = 15
+const COL_COUNT = 17
 
 export function AnnualTable() {
   const { result } = useScenario()
@@ -140,6 +146,8 @@ export function AnnualTable() {
               <th className="px-3 py-2 text-right whitespace-nowrap">特別CF</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">年間収支</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">積立</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">取り崩し</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">配当</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">現金残高</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">NISA</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">課税口座</th>
@@ -179,6 +187,12 @@ export function AnnualTable() {
                     </td>
                     <td className="px-3 py-1.5 text-right text-blue-600">
                       {row.investmentContribution > 0 ? fmt(row.investmentContribution) : '-'}
+                    </td>
+                    <td className="px-3 py-1.5 text-right text-orange-600">
+                      {row.retirementDrawdown > 0 ? fmt(row.retirementDrawdown) : '-'}
+                    </td>
+                    <td className="px-3 py-1.5 text-right text-yellow-600">
+                      {row.dividendIncome > 0 ? fmt(row.dividendIncome) : '-'}
                     </td>
                     <td className="px-3 py-1.5 text-right font-semibold text-gray-900">
                       {fmt(row.endingCash)}

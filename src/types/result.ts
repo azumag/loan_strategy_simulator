@@ -39,6 +39,8 @@ export interface AnnualRow {
   specialCashflow: number
   netCashflow: number
   investmentContribution: number  // 年間投資積立額（現金→投資口座への移動合計）
+  retirementDrawdown: number      // 年間取り崩し額（NISA+課税口座→現金）
+  dividendIncome: number          // 配当収入合計（税引後）
   endingCash: number
   endingNisaBalance: number
   endingLiquidAssets: number
