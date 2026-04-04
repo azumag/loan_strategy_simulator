@@ -14,7 +14,7 @@ import { PrepaymentStrategyEditor } from './components/inputs/PrepaymentStrategy
 import { SummaryCard } from './components/results/SummaryCard'
 import { AnnualTable } from './components/results/AnnualTable'
 import { ChartView } from './components/results/ChartView'
-import { ScenarioManager } from './components/data/ScenarioManager'
+
 
 function ShortageWarning() {
   const { result } = useScenario()
@@ -51,7 +51,6 @@ function AppContent() {
             <SummaryCard />
             <ChartView />
             <AnnualTable />
-            <ScenarioManager />
           </div>
         )}
       </main>

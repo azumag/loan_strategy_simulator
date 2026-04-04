@@ -1,5 +1,6 @@
 import { useScenario } from '../../store/scenario-store'
 import { RateScheduleEntry } from '../../types'
+import { SliderInput } from '../ui/SliderInput'
 
 export function LoanConditionForm() {
   const { scenario, dispatch } = useScenario()
@@ -25,39 +26,27 @@ export function LoanConditionForm() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">ローン条件</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">借入元本（万円）</label>
-          <input
-            type="number"
-            value={loan.principal / 10000}
-            onChange={(e) => updateLoan('principal', Number(e.target.value) * 10000)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min={0}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <SliderInput
+          label="借入元本"
+          value={loan.principal / 10000}
+          onChange={(v) => updateLoan('principal', v * 10000)}
+          min={0} max={20000} step={100} unit="万円"
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">借入開始年齢</label>
-          <input
-            type="number"
-            value={loan.startAge}
-            onChange={(e) => updateLoan('startAge', Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <SliderInput
+          label="借入開始年齢"
+          value={loan.startAge}
+          onChange={(v) => updateLoan('startAge', v)}
+          min={20} max={65} step={1} unit="歳"
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">返済期間（年）</label>
-          <input
-            type="number"
-            value={loan.loanTermYears}
-            onChange={(e) => updateLoan('loanTermYears', Number(e.target.value))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min={1}
-            max={50}
-          />
-        </div>
+        <SliderInput
+          label="返済期間"
+          value={loan.loanTermYears}
+          onChange={(v) => updateLoan('loanTermYears', v)}
+          min={1} max={50} step={1} unit="年"
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">返済方式</label>
@@ -69,9 +58,9 @@ export function LoanConditionForm() {
             <option value="equal_payment">元利均等返済</option>
             <option value="equal_principal">元金均等返済</option>
           </select>
-          <div className="text-xs text-gray-600 mt-2 space-y-1">
-            <p><strong>元利均等返済</strong>: 毎月の返済額が一定。初期は利息が多く、後期は元金が多くなる。返済計画が立てやすい。</p>
-            <p><strong>元金均等返済</strong>: 毎月の元金返済が一定。初期の返済額が高く、時間とともに減少。利息負担が少ない。</p>
+          <div className="text-xs text-gray-500 mt-2 space-y-1">
+            <p><strong>元利均等返済</strong>: 毎月の返済額が一定。返済計画が立てやすい。</p>
+            <p><strong>元金均等返済</strong>: 毎月の元金が一定。総利息が少ない。</p>
           </div>
         </div>
       </div>
@@ -79,57 +68,33 @@ export function LoanConditionForm() {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-gray-700">金利スケジュール</h3>
-          <button
-            onClick={addRate}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            + 追加
-          </button>
+          <button onClick={addRate} className="text-xs text-blue-600 hover:underline">+ 追加</button>
         </div>
-        <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-left px-3 py-2 text-xs text-gray-600">開始年次</th>
-              <th className="text-left px-3 py-2 text-xs text-gray-600">金利（%）</th>
-              <th className="px-3 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loan.rateSchedule.map((entry, i) => (
-              <tr key={i} className="border-t border-gray-100">
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    value={entry.fromYear}
-                    onChange={(e) => updateRate(i, 'fromYear', Number(e.target.value))}
-                    className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
-                    min={1}
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    value={(entry.rate * 100).toFixed(2)}
-                    onChange={(e) => updateRate(i, 'rate', Number(e.target.value) / 100)}
-                    className="w-24 border border-gray-300 rounded px-2 py-1 text-sm"
-                    step={0.01}
-                    min={0}
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  {loan.rateSchedule.length > 1 && (
-                    <button
-                      onClick={() => removeRate(i)}
-                      className="text-red-500 hover:text-red-700 text-xs"
-                    >
-                      削除
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="space-y-3">
+          {loan.rateSchedule.map((entry, i) => (
+            <div key={i} className="flex items-end gap-4 bg-gray-50 rounded-lg p-3">
+              <SliderInput
+                label="開始年次"
+                value={entry.fromYear}
+                onChange={(v) => updateRate(i, 'fromYear', v)}
+                min={1} max={loan.loanTermYears} step={1} unit="年目〜"
+                className="flex-1"
+              />
+              <SliderInput
+                label="金利"
+                value={parseFloat((entry.rate * 100).toFixed(2))}
+                onChange={(v) => updateRate(i, 'rate', v / 100)}
+                min={0} max={5} step={0.01} unit="%"
+                className="flex-1"
+              />
+              {loan.rateSchedule.length > 1 && (
+                <button onClick={() => removeRate(i)} className="text-red-500 text-xs hover:underline mb-1 shrink-0">
+                  削除
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

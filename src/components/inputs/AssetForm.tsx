@@ -1,4 +1,5 @@
 import { useScenario } from '../../store/scenario-store'
+import { SliderInput } from '../ui/SliderInput'
 
 export function AssetForm() {
   const { scenario, dispatch } = useScenario()
@@ -7,54 +8,49 @@ export function AssetForm() {
   const update = (key: keyof typeof assets, value: number) =>
     dispatch({ type: 'UPDATE_ASSETS', payload: { [key]: value } })
 
-  const fields: { key: keyof typeof assets; label: string }[] = [
-    { key: 'initialCash', label: '初期現金（万円）' },
-    { key: 'initialLiquidAssets', label: '流動資産（万円）' },
-    { key: 'initialSemiLiquidAssets', label: '準流動資産（万円）' },
-    { key: 'initialRetirementAssets', label: '退職金見込み（万円）' },
-    { key: 'annualSavingsContribution', label: '年間追加積立（万円）' },
-  ]
-
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">資産・防衛資金</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {fields.map(({ key, label }) => (
-          <div key={key}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <input
-              type="number"
-              value={(assets[key] as number) / 10000}
-              onChange={(e) => update(key, Number(e.target.value) * 10000)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              min={0}
-            />
-            {key === 'initialLiquidAssets' && (
-              <p className="text-xs text-gray-600 mt-2">
-                すぐに売却・現金化できる資産（預貯金、株式など）。運用利回りが適用され、毎年増加します。
-              </p>
-            )}
-            {key === 'initialSemiLiquidAssets' && (
-              <p className="text-xs text-gray-600 mt-2">
-                売却に時間がかかるが、緊急時に現金化可能な資産（貴金属、美術品など）。運用利回りは適用されず、下記の使用可能割合まで緊急時に取り崩し可能。
-              </p>
-            )}
-          </div>
-        ))}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">緊急時使用可能割合（%）</label>
-          <input
-            type="number"
-            value={assets.emergencyUsableRatio * 100}
-            onChange={(e) => dispatch({ type: 'UPDATE_ASSETS', payload: { emergencyUsableRatio: Number(e.target.value) / 100 } })}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min={0}
-            max={100}
-          />
-          <p className="text-xs text-gray-600 mt-2">
-            準流動資産から実際に使用できる割合。例）準流動資産 500 万円、50% なら最大 250 万円まで緊急時に取り崩し可能。
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <SliderInput
+          label="初期現金"
+          value={assets.initialCash / 10000}
+          onChange={(v) => update('initialCash', v * 10000)}
+          min={0} max={5000} step={50} unit="万円"
+        />
+        <SliderInput
+          label="流動資産"
+          value={assets.initialLiquidAssets / 10000}
+          onChange={(v) => update('initialLiquidAssets', v * 10000)}
+          min={0} max={10000} step={100} unit="万円"
+          note="すぐに現金化できる資産（預貯金・株式等）。運用利回りが毎年適用されます。"
+        />
+        <SliderInput
+          label="準流動資産"
+          value={assets.initialSemiLiquidAssets / 10000}
+          onChange={(v) => update('initialSemiLiquidAssets', v * 10000)}
+          min={0} max={5000} step={50} unit="万円"
+          note="緊急時に現金化可能な資産（貴金属・美術品等）。運用利回りは適用されません。"
+        />
+        <SliderInput
+          label="退職金見込み"
+          value={assets.initialRetirementAssets / 10000}
+          onChange={(v) => update('initialRetirementAssets', v * 10000)}
+          min={0} max={5000} step={100} unit="万円"
+        />
+        <SliderInput
+          label="年間追加積立"
+          value={assets.annualSavingsContribution / 10000}
+          onChange={(v) => update('annualSavingsContribution', v * 10000)}
+          min={0} max={500} step={10} unit="万円/年"
+        />
+        <SliderInput
+          label="緊急時使用可能割合"
+          value={Math.round(assets.emergencyUsableRatio * 100)}
+          onChange={(v) => update('emergencyUsableRatio', v / 100)}
+          min={0} max={100} step={5} unit="%"
+          note="準流動資産から実際に使用できる割合。"
+        />
       </div>
     </div>
   )

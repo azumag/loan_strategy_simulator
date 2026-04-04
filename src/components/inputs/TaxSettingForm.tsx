@@ -1,6 +1,7 @@
 import { useScenario } from '../../store/scenario-store'
 import { HousingLoanScheme } from '../../types'
 import { HOUSING_LOAN_SCHEMES } from '../../core/engine'
+import { SliderInput } from '../ui/SliderInput'
 
 const SCHEME_OPTIONS: { value: HousingLoanScheme; label: string }[] = [
   { value: 'long_term', label: '認定長期優良住宅・低炭素住宅（上限4,500万円・13年）' },
@@ -105,18 +106,16 @@ export function TaxSettingForm() {
       </div>
 
       {/* その他の控除 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {otherFields.map(({ key, label }) => (
-          <div key={key}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <input
-              type="number"
-              value={(tax[key] as number) / 10000}
-              onChange={(e) => update(key, Number(e.target.value) * 10000)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              min={0}
-            />
-          </div>
+          <SliderInput
+            key={key}
+            label={label.replace('（万円）', '')}
+            value={(tax[key] as number) / 10000}
+            onChange={(v) => update(key, v * 10000)}
+            min={0} max={key === 'basicDeductionAnnual' ? 100 : key === 'medicalDeductionAnnual' ? 200 : 80}
+            step={1} unit="万円"
+          />
         ))}
       </div>
     </div>

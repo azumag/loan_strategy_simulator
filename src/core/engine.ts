@@ -9,10 +9,10 @@ import { applyPrepayments } from './prepayment'
 
 /** 2024年現行制度の住宅ローン控除パラメータ */
 export const HOUSING_LOAN_SCHEMES: Record<HousingLoanScheme, { name: string; limit: number; rate: number; years: number }> = {
-  long_term: { name: '認定長期優良住宅・低炭素住宅', limit: 4_500_000, rate: 0.007, years: 13 },
-  zeh:       { name: 'ZEH水準省エネ住宅',           limit: 3_500_000, rate: 0.007, years: 13 },
-  eco:       { name: '省エネ基準適合住宅',           limit: 3_000_000, rate: 0.007, years: 13 },
-  general:   { name: 'その他の住宅（一般）',         limit: 2_000_000, rate: 0.007, years: 10 },
+  long_term: { name: '認定長期優良住宅・低炭素住宅', limit: 45_000_000, rate: 0.007, years: 13 },
+  zeh:       { name: 'ZEH水準省エネ住宅',           limit: 35_000_000, rate: 0.007, years: 13 },
+  eco:       { name: '省エネ基準適合住宅',           limit: 30_000_000, rate: 0.007, years: 13 },
+  general:   { name: 'その他の住宅（一般）',         limit: 20_000_000, rate: 0.007, years: 10 },
 }
 
 // 倒産防止共済の年間掛金上限と累計上限

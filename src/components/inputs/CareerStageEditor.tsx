@@ -1,5 +1,6 @@
 import { useScenario } from '../../store/scenario-store'
 import { CareerStage, WorkStyle, SmallBusinessMutualPayoutMethod } from '../../types'
+import { SliderInput } from '../ui/SliderInput'
 
 const EMPTY_EMPLOYEE: CareerStage = {
   fromAge: 40,
@@ -111,130 +112,66 @@ export function CareerStageEditor() {
           </div>
 
           {stage.workStyle === 'employee' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-600 mb-1">入力モード</label>
                 <select
                   value={stage.salaryInputMode}
                   onChange={(e) => updateStage(i, { salaryInputMode: e.target.value as 'gross' | 'takehome' })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
                 >
                   <option value="gross">額面</option>
                   <option value="takehome">手取り</option>
                 </select>
               </div>
-              {stage.salaryInputMode === 'gross' ? (
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">額面年収（万円）</label>
-                  <input
-                    type="number"
-                    value={(stage.grossSalaryAnnual ?? 0) / 10000}
-                    onChange={(e) => updateStage(i, { grossSalaryAnnual: Number(e.target.value) * 10000 })}
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">手取り年収（万円）</label>
-                  <input
-                    type="number"
-                    value={(stage.takehomeSalaryAnnual ?? 0) / 10000}
-                    onChange={(e) => updateStage(i, { takehomeSalaryAnnual: Number(e.target.value) * 10000 })}
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">賞与（万円）</label>
-                <input
-                  type="number"
-                  value={stage.bonusAnnual / 10000}
-                  onChange={(e) => updateStage(i, { bonusAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {stage.salaryInputMode === 'gross' ? (
+                  <SliderInput label="額面年収" value={(stage.grossSalaryAnnual ?? 0) / 10000}
+                    onChange={(v) => updateStage(i, { grossSalaryAnnual: v * 10000 })}
+                    min={0} max={5000} step={50} unit="万円" />
+                ) : (
+                  <SliderInput label="手取り年収" value={(stage.takehomeSalaryAnnual ?? 0) / 10000}
+                    onChange={(v) => updateStage(i, { takehomeSalaryAnnual: v * 10000 })}
+                    min={0} max={5000} step={50} unit="万円" />
+                )}
+                <SliderInput label="賞与" value={stage.bonusAnnual / 10000}
+                  onChange={(v) => updateStage(i, { bonusAnnual: v * 10000 })}
+                  min={0} max={500} step={10} unit="万円" />
               </div>
             </div>
           )}
 
           {stage.workStyle === 'self_employed' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">年間売上（万円）</label>
-                <input
-                  type="number"
-                  value={stage.grossRevenueAnnual / 10000}
-                  onChange={(e) => updateStage(i, { grossRevenueAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">必要経費（万円）</label>
-                <input
-                  type="number"
-                  value={stage.businessExpenseAnnual / 10000}
-                  onChange={(e) => updateStage(i, { businessExpenseAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">青色申告特別控除（万円）</label>
-                <input
-                  type="number"
-                  value={stage.bluePenaltyDeduction / 10000}
-                  onChange={(e) => updateStage(i, { bluePenaltyDeduction: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">小規模企業共済（万円）</label>
-                <input
-                  type="number"
-                  value={stage.smallBusinessMutualAnnual / 10000}
-                  onChange={(e) => updateStage(i, { smallBusinessMutualAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">倒産防止共済（万円）</label>
-                <input
-                  type="number"
-                  value={stage.bankruptcyMutualAnnual / 10000}
-                  onChange={(e) => updateStage(i, { bankruptcyMutualAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SliderInput label="年間売上" value={stage.grossRevenueAnnual / 10000}
+                onChange={(v) => updateStage(i, { grossRevenueAnnual: v * 10000 })}
+                min={0} max={20000} step={100} unit="万円" />
+              <SliderInput label="必要経費" value={stage.businessExpenseAnnual / 10000}
+                onChange={(v) => updateStage(i, { businessExpenseAnnual: v * 10000 })}
+                min={0} max={10000} step={50} unit="万円" />
+              <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
+                onChange={(v) => updateStage(i, { bluePenaltyDeduction: v * 10000 })}
+                min={0} max={65} step={10} unit="万円" />
+              <SliderInput label="小規模企業共済" value={stage.smallBusinessMutualAnnual / 10000}
+                onChange={(v) => updateStage(i, { smallBusinessMutualAnnual: v * 10000 })}
+                min={0} max={84} step={1} unit="万円/年" />
+              <SliderInput label="倒産防止共済" value={stage.bankruptcyMutualAnnual / 10000}
+                onChange={(v) => updateStage(i, { bankruptcyMutualAnnual: v * 10000 })}
+                min={0} max={240} step={10} unit="万円/年" />
             </div>
           )}
 
           {stage.workStyle === 'retired' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">国民年金（万円）</label>
-                <input
-                  type="number"
-                  value={stage.retirementNationalPensionAnnual / 10000}
-                  onChange={(e) => updateStage(i, { retirementNationalPensionAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">厚生年金（万円）</label>
-                <input
-                  type="number"
-                  value={stage.retirementEmployeesPensionAnnual / 10000}
-                  onChange={(e) => updateStage(i, { retirementEmployeesPensionAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">その他収入（万円）</label>
-                <input
-                  type="number"
-                  value={stage.retirementOtherIncomeAnnual / 10000}
-                  onChange={(e) => updateStage(i, { retirementOtherIncomeAnnual: Number(e.target.value) * 10000 })}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SliderInput label="国民年金" value={stage.retirementNationalPensionAnnual / 10000}
+                onChange={(v) => updateStage(i, { retirementNationalPensionAnnual: v * 10000 })}
+                min={0} max={120} step={1} unit="万円/年" />
+              <SliderInput label="厚生年金" value={stage.retirementEmployeesPensionAnnual / 10000}
+                onChange={(v) => updateStage(i, { retirementEmployeesPensionAnnual: v * 10000 })}
+                min={0} max={300} step={1} unit="万円/年" />
+              <SliderInput label="その他収入" value={stage.retirementOtherIncomeAnnual / 10000}
+                onChange={(v) => updateStage(i, { retirementOtherIncomeAnnual: v * 10000 })}
+                min={0} max={300} step={5} unit="万円/年" />
             </div>
           )}
         </div>
