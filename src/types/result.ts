@@ -37,6 +37,7 @@ export interface AnnualRow {
   housingTaxAnnual: number
   livingCostAnnual: number
   specialCashflow: number
+  spouseNetIncome: number          // 配偶者手取り収入
   netCashflow: number
   investmentContribution: number  // 年間投資積立額（現金→投資口座への移動合計）
   retirementDrawdown: number      // 年間取り崩し額（NISA+課税口座→現金）

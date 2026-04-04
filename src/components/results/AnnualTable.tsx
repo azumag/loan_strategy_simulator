@@ -38,7 +38,10 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   const netWorth = row.endingAssets - row.loanBalance
 
   const monthlyItems = [
-    { label: '収入', value: fmtM(row.grossIncome), color: 'text-green-700' },
+    { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
+    ...(row.spouseNetIncome > 0 ? [
+      { label: '収入（配偶者・手取）', value: `+${fmtM(row.spouseNetIncome)}`, color: 'text-teal-600' },
+    ] : []),
     { label: '所得税', value: `-${fmtM(row.incomeTax)}`, color: 'text-orange-500' },
     { label: '住民税', value: `-${fmtM(row.residentTax)}`, color: 'text-orange-500' },
     ...(row.socialInsuranceBreakdown ? [
@@ -121,7 +124,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   )
 }
 
-const COL_COUNT = 17
+const COL_COUNT = 18
 
 export function AnnualTable() {
   const { result } = useScenario()
@@ -139,6 +142,7 @@ export function AnnualTable() {
               <th className="px-3 py-2 text-left whitespace-nowrap">年齢</th>
               <th className="px-3 py-2 text-left whitespace-nowrap">雇用形態</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">総収入</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">配偶者収入</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">税・社保</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">ローン返済</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">住宅費</th>
@@ -175,6 +179,9 @@ export function AnnualTable() {
                     </td>
                     <td className="px-3 py-1.5 whitespace-nowrap text-gray-600">{WORK_STYLE_LABEL[row.workStyle] ?? row.workStyle}</td>
                     <td className="px-3 py-1.5 text-right">{fmt(row.grossIncome)}</td>
+                    <td className="px-3 py-1.5 text-right text-teal-600">
+                      {row.spouseNetIncome > 0 ? fmt(row.spouseNetIncome) : '-'}
+                    </td>
                     <td className="px-3 py-1.5 text-right text-orange-700">{fmt(totalTax)}</td>
                     <td className="px-3 py-1.5 text-right text-red-700">{fmt(row.loanRepaymentAnnual)}</td>
                     <td className="px-3 py-1.5 text-right text-red-600">{fmt(row.housingTaxAnnual)}</td>

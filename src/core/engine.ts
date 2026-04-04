@@ -385,6 +385,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       housingTaxAnnual,
       livingCostAnnual,
       specialCashflow,
+      spouseNetIncome,
       netCashflow,
       investmentContribution,
       retirementDrawdown,
