@@ -1,4 +1,4 @@
-import { Scenario, SimulationResult, AnnualRow, Summary } from '../types'
+import { Scenario, SimulationResult, AnnualRow, Summary, HousingLoanScheme } from '../types'
 import { calcLoanYear, calcEqualPaymentMonthly, resolveRate } from './loan-calc'
 import {
   calcSoleProprietorTax, calcEmployeeTax, calcRetiredTax,
@@ -6,6 +6,14 @@ import {
 } from './tax-calc'
 import { resolveCareerStage } from './career-resolver'
 import { applyPrepayments } from './prepayment'
+
+/** 2024年現行制度の住宅ローン控除パラメータ */
+export const HOUSING_LOAN_SCHEMES: Record<HousingLoanScheme, { name: string; limit: number; rate: number; years: number }> = {
+  long_term: { name: '認定長期優良住宅・低炭素住宅', limit: 4_500_000, rate: 0.007, years: 13 },
+  zeh:       { name: 'ZEH水準省エネ住宅',           limit: 3_500_000, rate: 0.007, years: 13 },
+  eco:       { name: '省エネ基準適合住宅',           limit: 3_000_000, rate: 0.007, years: 13 },
+  general:   { name: 'その他の住宅（一般）',         limit: 2_000_000, rate: 0.007, years: 10 },
+}
 
 // 倒産防止共済の年間掛金上限と累計上限
 const BANKRUPTCY_MUTUAL_ANNUAL_MAX = 2_400_000   // 月20万×12
@@ -44,6 +52,25 @@ export function simulate(scenario: Scenario): SimulationResult {
 
     // 1. キャリアステージ解決
     const stage = resolveCareerStage(age, careerStages)
+
+    // 1b. 住宅ローン控除の計算（auto モード: 年末残高ベース）
+    // 年末残高を先行計算してから税計算に利用する
+    let yearEndLoanBalanceForDeduction = 0
+    if (loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears) {
+      yearEndLoanBalanceForDeduction = calcLoanYear(loan, loanYear, loanBalance).endingBalance
+    }
+    let effectiveHousingDeduction = tax.housingLoanDeductionAnnual
+    if ((tax.housingLoanDeductionMode ?? 'auto') === 'auto') {
+      const scheme = HOUSING_LOAN_SCHEMES[tax.housingLoanScheme ?? 'eco']
+      if (loanYear >= 1 && loanYear <= scheme.years) {
+        effectiveHousingDeduction = Math.floor(
+          Math.min(yearEndLoanBalanceForDeduction, scheme.limit) * scheme.rate
+        )
+      } else {
+        effectiveHousingDeduction = 0
+      }
+    }
+    const effectiveTax = { ...tax, housingLoanDeductionAnnual: effectiveHousingDeduction }
 
     // 2. 収入算出
     let grossIncome = 0
@@ -100,7 +127,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         }
         grossIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual + stage.sideIncomeAnnual
         businessExpenses = stage.businessExpenseAnnual
-        const taxResult = calcSoleProprietorTax(resolvedStage, tax)
+        const taxResult = calcSoleProprietorTax(resolvedStage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
@@ -118,7 +145,7 @@ export function simulate(scenario: Scenario): SimulationResult {
           ? (stage.takehomeSalaryAnnual ?? 0) + stage.bonusAnnual
           : (stage.grossSalaryAnnual ?? 0) + stage.bonusAnnual + stage.sideIncomeAnnual
         grossIncome = sal
-        const taxResult = calcEmployeeTax(stage, tax)
+        const taxResult = calcEmployeeTax(stage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
@@ -132,7 +159,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         grossIncome = augmentedStage.retirementNationalPensionAnnual +
           augmentedStage.retirementEmployeesPensionAnnual +
           augmentedStage.retirementOtherIncomeAnnual
-        const taxResult = calcRetiredTax(augmentedStage, tax)
+        const taxResult = calcRetiredTax(augmentedStage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax

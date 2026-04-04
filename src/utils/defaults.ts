@@ -46,6 +46,8 @@ export const DEFAULT_SCENARIO: Scenario = {
     medicalDeductionAnnual: 0,
     otherDeductionAnnual: 0,
     housingLoanDeductionAnnual: 0,
+    housingLoanDeductionMode: 'auto' as const,
+    housingLoanScheme: 'eco' as const,
     residentTaxLagEnabled: false,
   },
   housing: {
