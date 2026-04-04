@@ -14,7 +14,12 @@ function migrateScenario(loaded: unknown): Scenario {
     tax: { ...DEFAULT_SCENARIO.tax, ...(s.tax ?? {}) },
     housing: { ...DEFAULT_SCENARIO.housing, ...(s.housing ?? {}) },
     living: { ...DEFAULT_SCENARIO.living, ...(s.living ?? {}) },
-    assets: { ...DEFAULT_SCENARIO.assets, ...(s.assets ?? {}) },
+    assets: {
+      ...DEFAULT_SCENARIO.assets,
+      ...(s.assets ?? {}),
+      initialNisaBalance: (s.assets as { initialNisaBalance?: number })?.initialNisaBalance ?? 0,
+      annualNisaContribution: (s.assets as { annualNisaContribution?: number })?.annualNisaContribution ?? 0,
+    },
     strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
     mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },
     careerStages: (s.careerStages ?? DEFAULT_SCENARIO.careerStages).map(stage => {

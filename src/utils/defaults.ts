@@ -69,9 +69,11 @@ export const DEFAULT_SCENARIO: Scenario = {
   assets: {
     initialCash: 5_000_000,
     initialLiquidAssets: 2_000_000,
+    initialNisaBalance: 0,
     initialSemiLiquidAssets: 0,
     initialRetirementAssets: 0,
     annualSavingsContribution: 0,
+    annualNisaContribution: 0,
     emergencyUsableRatio: 0.7,
   },
   spouseCareerStages: [],

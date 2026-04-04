@@ -1,9 +1,11 @@
 export interface AssetConfig {
   initialCash: number
-  initialLiquidAssets: number
+  initialLiquidAssets: number    // 課税口座（流動資産）
+  initialNisaBalance: number     // NISA残高（非課税）
   initialSemiLiquidAssets: number
   initialRetirementAssets: number
-  annualSavingsContribution: number
+  annualSavingsContribution: number  // 課税口座への年間積立
+  annualNisaContribution: number     // NISAへの年間積立（上限360万/年、累計1800万）
   emergencyUsableRatio: number
 }
 

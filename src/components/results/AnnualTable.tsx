@@ -40,7 +40,10 @@ export function AnnualTable() {
               <th className="px-3 py-2 text-right whitespace-nowrap">生活費</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">特別CF</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">年間収支</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">積立</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">現金残高</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">NISA</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">課税口座</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">総資産</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">ローン残債</th>
             </tr>
@@ -73,8 +76,17 @@ export function AnnualTable() {
                   <td className={`px-3 py-1.5 text-right font-medium ${row.netCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                     {row.netCashflow > 0 ? '+' : ''}{fmt(row.netCashflow)}
                   </td>
+                  <td className="px-3 py-1.5 text-right text-blue-600">
+                    {row.investmentContribution > 0 ? fmt(row.investmentContribution) : '-'}
+                  </td>
                   <td className={`px-3 py-1.5 text-right font-semibold ${isShortage ? 'text-red-700' : 'text-gray-900'}`}>
                     {isShortage ? '⚠ ' : ''}{fmt(row.endingCash)}
+                  </td>
+                  <td className="px-3 py-1.5 text-right text-green-700">
+                    {row.endingNisaBalance > 0 ? fmt(row.endingNisaBalance) : '-'}
+                  </td>
+                  <td className="px-3 py-1.5 text-right text-purple-700">
+                    {row.endingLiquidAssets > 0 ? fmt(row.endingLiquidAssets) : '-'}
                   </td>
                   <td className="px-3 py-1.5 text-right text-gray-700">{fmt(row.endingAssets)}</td>
                   <td className="px-3 py-1.5 text-right text-gray-600">{fmt(row.loanBalance)}</td>

@@ -33,7 +33,10 @@ export interface AnnualRow {
   livingCostAnnual: number
   specialCashflow: number
   netCashflow: number
+  investmentContribution: number  // 年間投資積立額（現金→投資口座への移動合計）
   endingCash: number
+  endingNisaBalance: number
+  endingLiquidAssets: number
   endingAssets: number
   loanBalance: number
 }

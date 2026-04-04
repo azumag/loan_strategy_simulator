@@ -27,6 +27,9 @@ export function ChartView() {
   const labels = rows.map((r) => `${r.age}歳`)
   const toMan = (n: number) => Math.round(n / 10000)
 
+  const hasNisa = rows.some((r) => r.endingNisaBalance > 0)
+  const hasLiquid = rows.some((r) => r.endingLiquidAssets > 0)
+
   const balanceData = {
     labels,
     datasets: [
@@ -37,11 +40,27 @@ export function ChartView() {
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.1,
       },
+      ...(hasNisa ? [{
+        label: 'NISA残高',
+        data: rows.map((r) => toMan(r.endingNisaBalance)),
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.1,
+        borderDash: [4, 2],
+      }] : []),
+      ...(hasLiquid ? [{
+        label: '課税口座',
+        data: rows.map((r) => toMan(r.endingLiquidAssets)),
+        borderColor: 'rgb(168, 85, 247)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.1,
+        borderDash: [4, 2],
+      }] : []),
       {
         label: '総資産',
         data: rows.map((r) => toMan(r.endingAssets)),
-        borderColor: 'rgb(16, 185, 129)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: 'rgb(234, 179, 8)',
+        backgroundColor: 'rgba(234, 179, 8, 0.1)',
         tension: 0.1,
       },
       {

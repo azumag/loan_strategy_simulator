@@ -26,9 +26,15 @@ export function simulate(scenario: Scenario): SimulationResult {
 
   const rows: AnnualRow[] = []
   let cash = assets.initialCash
-  let liquidAssets = assets.initialLiquidAssets
+  let liquidAssets = assets.initialLiquidAssets     // 課税口座
+  let nisaBalance = assets.initialNisaBalance ?? 0  // NISA（非課税）
   const loanPrincipal = Math.max(0, loan.principal - (loan.downPayment ?? 0))
   let loanBalance = loanPrincipal
+
+  // NISA上限（新NISA: 生涯1800万、年間360万）
+  const NISA_LIFETIME_CAP = 18_000_000
+  const NISA_ANNUAL_CAP = 3_600_000
+  let nisaContributed = assets.initialNisaBalance ?? 0  // 積立済み累計（初期残高を元手として計上）
   let totalRepayment = 0
   let totalInterest = 0
 
@@ -247,9 +253,28 @@ export function simulate(scenario: Scenario): SimulationResult {
     // 9. 現金・資産更新
     cash += netCashflow
 
+    // 投資積立（現金 → 投資口座への移動）
+    const annualNisaContrib = assets.annualNisaContribution ?? 0
+    const annualTaxableContrib = assets.annualSavingsContribution ?? 0
+
+    // NISA積立（年間上限・生涯上限を考慮）
+    const nisaRoom = Math.max(0, NISA_LIFETIME_CAP - nisaContributed)
+    const effectiveNisaContrib = Math.min(annualNisaContrib, NISA_ANNUAL_CAP, nisaRoom, Math.max(0, cash))
+    cash -= effectiveNisaContrib
+    nisaBalance += effectiveNisaContrib
+    nisaContributed += effectiveNisaContrib
+
+    // 課税口座積立
+    const effectiveTaxableContrib = Math.min(annualTaxableContrib, Math.max(0, cash))
+    cash -= effectiveTaxableContrib
+    liquidAssets += effectiveTaxableContrib
+
+    const investmentContribution = effectiveNisaContrib + effectiveTaxableContrib
+
     // 資産運用利回り適用
     if (sc.investmentReturnRate > 0) {
-      liquidAssets *= (1 + sc.investmentReturnRate)
+      nisaBalance *= (1 + sc.investmentReturnRate)         // NISA: 非課税（全額）
+      liquidAssets *= (1 + sc.investmentReturnRate)        // 課税口座: 利回り適用（売却時課税は簡略化）
     }
 
     // 10. 繰上返済
@@ -269,7 +294,7 @@ export function simulate(scenario: Scenario): SimulationResult {
 
     totalRepayment += loanRepaymentAnnual + prepayResult.prepaymentAmount
 
-    const endingAssets = cash + liquidAssets
+    const endingAssets = cash + nisaBalance + liquidAssets
 
     rows.push({
       age,
@@ -289,7 +314,10 @@ export function simulate(scenario: Scenario): SimulationResult {
       livingCostAnnual,
       specialCashflow,
       netCashflow,
+      investmentContribution,
       endingCash: cash,
+      endingNisaBalance: nisaBalance,
+      endingLiquidAssets: liquidAssets,
       endingAssets,
       loanBalance: newLoanBalance,
     })
