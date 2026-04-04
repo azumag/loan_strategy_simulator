@@ -1,16 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { useScenario } from '../../store/scenario-store'
-import { saveScenario, loadCurrentScenario, listScenarios } from '../../store/storage'
+import { saveNewScenario, loadScenarioById, listScenarios, getCurrentScenarioId, saveScenario } from '../../store/storage'
 
 function ScenarioMenu() {
   const { scenario, dispatch } = useScenario()
   const [open, setOpen] = useState(false)
   const [msg, setMsg] = useState('')
   const [savedList, setSavedList] = useState<{ id: string; name: string }[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setSavedList(listScenarios())
+    if (open) {
+      setSavedList(listScenarios())
+      setActiveId(getCurrentScenarioId())
+    }
   }, [open])
 
   useEffect(() => {
@@ -27,15 +31,22 @@ function ScenarioMenu() {
   }
 
   const handleSave = () => {
-    saveScenario(scenario)
+    if (activeId) {
+      saveScenario(scenario, activeId)
+      flash('上書き保存しました')
+    } else {
+      const id = saveNewScenario(scenario)
+      setActiveId(id)
+      flash('保存しました')
+    }
     setSavedList(listScenarios())
-    flash('保存しました')
   }
 
-  const handleLoad = () => {
-    const loaded = loadCurrentScenario()
+  const handleLoad = (id: string) => {
+    const loaded = loadScenarioById(id)
     if (loaded) {
       dispatch({ type: 'LOAD', payload: loaded })
+      setActiveId(id)
       flash('読み込みました')
       setOpen(false)
     }
@@ -44,6 +55,7 @@ function ScenarioMenu() {
   const handleReset = () => {
     if (confirm('初期値にリセットしますか？')) {
       dispatch({ type: 'RESET' })
+      setActiveId(null)
       setOpen(false)
     }
   }
@@ -70,14 +82,7 @@ function ScenarioMenu() {
                 onClick={handleSave}
                 className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
               >
-                保存
-              </button>
-              <button
-                onClick={handleLoad}
-                disabled={savedList.length === 0}
-                className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors disabled:opacity-40"
-              >
-                読み込み
+                {activeId ? '上書き' : '保存'}
               </button>
               <button
                 onClick={handleReset}
@@ -87,17 +92,19 @@ function ScenarioMenu() {
               </button>
             </div>
 
-            {msg && (
-              <p className="text-xs text-green-600 font-medium">{msg}</p>
-            )}
+            {msg && <p className="text-xs text-green-600 font-medium">{msg}</p>}
 
             {savedList.length > 0 && (
               <div className="pt-1 border-t border-gray-100">
-                <p className="text-xs text-gray-500 mb-1.5">保存済み</p>
-                <ul className="space-y-1">
+                <p className="text-xs text-gray-500 mb-1.5">保存済み（クリックでロード）</p>
+                <ul className="space-y-1 max-h-48 overflow-y-auto">
                   {savedList.map((s) => (
-                    <li key={s.id} className="text-xs text-gray-700 bg-gray-50 px-2 py-1.5 rounded truncate">
-                      {s.name || s.id}
+                    <li
+                      key={s.id}
+                      onClick={() => s.id !== activeId && handleLoad(s.id)}
+                      className={`text-xs px-2 py-1.5 rounded truncate cursor-pointer transition-colors ${s.id === activeId ? 'bg-blue-50 text-blue-700 font-semibold cursor-default' : 'text-gray-700 bg-gray-50 hover:bg-blue-50 hover:text-blue-700'}`}
+                    >
+                      {s.id === activeId && '● '}{s.name || '（名称未設定）'}
                     </li>
                   ))}
                 </ul>

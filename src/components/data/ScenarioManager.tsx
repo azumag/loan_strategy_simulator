@@ -1,55 +1,94 @@
 import { useState, useEffect } from 'react'
 import { useScenario } from '../../store/scenario-store'
-import { saveScenario, loadCurrentScenario, listScenarios } from '../../store/storage'
+import {
+  saveScenario,
+  saveNewScenario,
+  loadScenarioById,
+  listScenarios,
+  deleteScenario,
+  getCurrentScenarioId,
+} from '../../store/storage'
 
 export function ScenarioManager() {
   const { scenario, dispatch } = useScenario()
   const [savedList, setSavedList] = useState<{ id: string; name: string }[]>([])
-  const [saveMsg, setSaveMsg] = useState('')
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [msg, setMsg] = useState('')
 
-  useEffect(() => {
+  const refresh = () => {
     setSavedList(listScenarios())
-  }, [])
-
-  const handleSave = () => {
-    saveScenario(scenario)
-    setSavedList(listScenarios())
-    setSaveMsg('保存しました')
-    setTimeout(() => setSaveMsg(''), 2000)
+    setActiveId(getCurrentScenarioId())
   }
 
-  const handleLoad = () => {
-    const loaded = loadCurrentScenario()
+  useEffect(() => { refresh() }, [])
+
+  const showMsg = (text: string) => {
+    setMsg(text)
+    setTimeout(() => setMsg(''), 2000)
+  }
+
+  // 上書き保存（現在のIDへ）
+  const handleOverwrite = () => {
+    if (!activeId) {
+      handleSaveNew()
+      return
+    }
+    saveScenario(scenario, activeId)
+    refresh()
+    showMsg('上書き保存しました')
+  }
+
+  // 新規保存
+  const handleSaveNew = () => {
+    const newId = saveNewScenario(scenario)
+    setActiveId(newId)
+    refresh()
+    showMsg('新規保存しました')
+  }
+
+  // シナリオをロード
+  const handleLoad = (id: string) => {
+    const loaded = loadScenarioById(id)
     if (loaded) {
       dispatch({ type: 'LOAD', payload: loaded })
-      setSaveMsg('読み込みました')
-      setTimeout(() => setSaveMsg(''), 2000)
+      setActiveId(id)
+      showMsg('読み込みました')
     }
   }
 
+  // シナリオを削除
+  const handleDelete = (id: string, name: string) => {
+    if (!confirm(`「${name}」を削除しますか？`)) return
+    deleteScenario(id)
+    if (activeId === id) setActiveId(null)
+    refresh()
+    showMsg('削除しました')
+  }
+
   const handleReset = () => {
-    if (confirm('初期値にリセットしますか？')) {
+    if (confirm('初期値にリセットしますか？（保存データは消えません）')) {
       dispatch({ type: 'RESET' })
+      setActiveId(null)
     }
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">データ管理</h2>
+    <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <h2 className="text-lg font-semibold text-gray-800">データ管理</h2>
 
-      <div className="flex gap-3 flex-wrap">
+      {/* 保存ボタン群 */}
+      <div className="flex gap-3 flex-wrap items-center">
         <button
-          onClick={handleSave}
+          onClick={handleOverwrite}
           className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
         >
-          保存
+          {activeId ? '上書き保存' : '保存'}
         </button>
         <button
-          onClick={handleLoad}
-          disabled={savedList.length === 0}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 disabled:opacity-50"
+          onClick={handleSaveNew}
+          className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
         >
-          読み込み
+          新規保存
         </button>
         <button
           onClick={handleReset}
@@ -57,21 +96,53 @@ export function ScenarioManager() {
         >
           リセット
         </button>
-        {saveMsg && <span className="text-sm text-green-600 self-center">{saveMsg}</span>}
+        {msg && <span className="text-sm text-green-600">{msg}</span>}
       </div>
 
-      {savedList.length > 0 && (
-        <div className="mt-4">
+      {/* 保存済み一覧 */}
+      {savedList.length > 0 ? (
+        <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">保存済みシナリオ</h3>
-          <ul className="space-y-1">
-            {savedList.map((s) => (
-              <li key={s.id} className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded">
-                {s.name || s.id}
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {savedList.map((s) => {
+              const isActive = s.id === activeId
+              return (
+                <li
+                  key={s.id}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg border ${isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}
+                >
+                  <span className={`text-sm flex-1 truncate ${isActive ? 'font-semibold text-blue-700' : 'text-gray-700'}`}>
+                    {isActive && <span className="mr-1 text-blue-500">●</span>}
+                    {s.name || '（名称未設定）'}
+                  </span>
+                  <div className="flex gap-2 ml-2 shrink-0">
+                    {!isActive && (
+                      <button
+                        onClick={() => handleLoad(s.id)}
+                        className="text-xs text-blue-600 hover:underline px-2 py-1"
+                      >
+                        ロード
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(s.id, s.name)}
+                      className="text-xs text-red-500 hover:underline px-2 py-1"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
+      ) : (
+        <p className="text-sm text-gray-400">保存済みシナリオはありません。</p>
       )}
+
+      <p className="text-xs text-gray-400">
+        ※ データはブラウザのローカルストレージに保存されます。起動時は先頭のシナリオを自動ロードします。
+      </p>
     </div>
   )
 }

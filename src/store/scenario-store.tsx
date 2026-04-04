@@ -2,6 +2,7 @@ import { createContext, useContext, useReducer, useMemo, ReactNode } from 'react
 import { Scenario, SimulationResult } from '../types'
 import { simulate } from '../core/engine'
 import { DEFAULT_SCENARIO } from '../utils/defaults'
+import { loadFirstScenario } from './storage'
 
 /** 旧バージョンの保存データに欠けているフィールドをデフォルト値で補完する */
 function migrateScenario(loaded: unknown): Scenario {
@@ -93,8 +94,13 @@ interface ScenarioContextValue {
 
 const ScenarioContext = createContext<ScenarioContextValue | null>(null)
 
+function getInitialScenario(): Scenario {
+  const saved = loadFirstScenario()
+  return saved ? migrateScenario(saved) : DEFAULT_SCENARIO
+}
+
 export function ScenarioProvider({ children }: { children: ReactNode }) {
-  const [scenario, dispatch] = useReducer(scenarioReducer, DEFAULT_SCENARIO)
+  const [scenario, dispatch] = useReducer(scenarioReducer, undefined, getInitialScenario)
   const result = useMemo(() => simulate(scenario), [scenario])
 
   return (

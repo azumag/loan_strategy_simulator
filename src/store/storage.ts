@@ -25,12 +25,8 @@ function save(data: StorageData): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
-export function saveScenario(scenario: Scenario, id = 'main'): void {
-  const existing = load() ?? {
-    version: VERSION,
-    currentScenarioId: id,
-    scenarios: [],
-  }
+export function saveScenario(scenario: Scenario, id: string): void {
+  const existing = load() ?? { version: VERSION, currentScenarioId: id, scenarios: [] }
   const idx = existing.scenarios.findIndex((s) => s.id === id)
   const entry = { id, name: scenario.scenario.name, data: scenario }
   if (idx >= 0) {
@@ -42,11 +38,29 @@ export function saveScenario(scenario: Scenario, id = 'main'): void {
   save(existing)
 }
 
+export function saveNewScenario(scenario: Scenario): string {
+  const id = `scenario-${Date.now()}`
+  saveScenario(scenario, id)
+  return id
+}
+
+export function loadScenarioById(id: string): Scenario | null {
+  const data = load()
+  if (!data) return null
+  return data.scenarios.find((s) => s.id === id)?.data ?? null
+}
+
+export function loadFirstScenario(): Scenario | null {
+  const data = load()
+  if (!data || data.scenarios.length === 0) return null
+  return data.scenarios[0].data
+}
+
 export function loadCurrentScenario(): Scenario | null {
   const data = load()
   if (!data) return null
   const current = data.scenarios.find((s) => s.id === data.currentScenarioId)
-  return current?.data ?? null
+  return current?.data ?? data.scenarios[0]?.data ?? null
 }
 
 export function listScenarios(): { id: string; name: string }[] {
@@ -54,9 +68,23 @@ export function listScenarios(): { id: string; name: string }[] {
   return data?.scenarios.map((s) => ({ id: s.id, name: s.name })) ?? []
 }
 
+export function getCurrentScenarioId(): string | null {
+  return load()?.currentScenarioId ?? null
+}
+
+export function setCurrentScenarioId(id: string): void {
+  const data = load()
+  if (!data) return
+  data.currentScenarioId = id
+  save(data)
+}
+
 export function deleteScenario(id: string): void {
   const data = load()
   if (!data) return
   data.scenarios = data.scenarios.filter((s) => s.id !== id)
+  if (data.currentScenarioId === id) {
+    data.currentScenarioId = data.scenarios[0]?.id ?? ''
+  }
   save(data)
 }
