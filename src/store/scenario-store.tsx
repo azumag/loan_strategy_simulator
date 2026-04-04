@@ -3,6 +3,29 @@ import { Scenario, SimulationResult } from '../types'
 import { simulate } from '../core/engine'
 import { DEFAULT_SCENARIO } from '../utils/defaults'
 
+/** 旧バージョンの保存データに欠けているフィールドをデフォルト値で補完する */
+function migrateScenario(loaded: unknown): Scenario {
+  const s = loaded as Partial<Scenario>
+  return {
+    ...DEFAULT_SCENARIO,
+    ...s,
+    scenario: { ...DEFAULT_SCENARIO.scenario, ...(s.scenario ?? {}) },
+    loan: { ...DEFAULT_SCENARIO.loan, ...(s.loan ?? {}) },
+    tax: { ...DEFAULT_SCENARIO.tax, ...(s.tax ?? {}) },
+    housing: { ...DEFAULT_SCENARIO.housing, ...(s.housing ?? {}) },
+    living: { ...DEFAULT_SCENARIO.living, ...(s.living ?? {}) },
+    assets: { ...DEFAULT_SCENARIO.assets, ...(s.assets ?? {}) },
+    strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
+    mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },
+    careerStages: (s.careerStages ?? DEFAULT_SCENARIO.careerStages).map(stage => {
+      if (stage.workStyle === 'self_employed') {
+        return { ...{ bankruptcyMutualAnnual: 0 }, ...stage }
+      }
+      return stage
+    }),
+  }
+}
+
 type ScenarioAction =
   | { type: 'UPDATE_SCENARIO'; payload: Partial<Scenario['scenario']> }
   | { type: 'UPDATE_LOAN'; payload: Partial<Scenario['loan']> }
@@ -42,7 +65,7 @@ function scenarioReducer(state: Scenario, action: ScenarioAction): Scenario {
     case 'RESET':
       return DEFAULT_SCENARIO
     case 'LOAD':
-      return action.payload
+      return migrateScenario(action.payload)
     default:
       return state
   }
