@@ -243,7 +243,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   )
 }
 
-const COL_COUNT = 18
+const COL_COUNT = 19
 
 export function AnnualTable() {
   const { result } = useScenario()
@@ -266,8 +266,9 @@ export function AnnualTable() {
               <th className="px-3 py-2 text-right whitespace-nowrap">ローン返済</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">住宅費</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">生活費</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">共済掛金</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">特別CF</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">年間収支</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">年間現金収支</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">積立</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">取り崩し</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">配当</th>
@@ -305,6 +306,9 @@ export function AnnualTable() {
                     <td className="px-3 py-1.5 text-right text-red-700">{fmt(row.loanRepaymentAnnual)}</td>
                     <td className="px-3 py-1.5 text-right text-red-600">{fmt(row.housingTaxAnnual)}</td>
                     <td className="px-3 py-1.5 text-right text-red-600">{fmt(row.livingCostAnnual)}</td>
+                    <td className="px-3 py-1.5 text-right text-purple-700">
+                      {(row.smallBusinessMutual + row.bankruptcyMutual) > 0 ? fmt(row.smallBusinessMutual + row.bankruptcyMutual) : '-'}
+                    </td>
                     <td className={`px-3 py-1.5 text-right ${row.specialCashflow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {row.specialCashflow !== 0 ? (row.specialCashflow > 0 ? '+' : '') + fmt(row.specialCashflow) : '-'}
                     </td>
