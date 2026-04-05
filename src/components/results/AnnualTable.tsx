@@ -35,10 +35,11 @@ function AssetBar({ label, value, total, color }: { label: string; value: number
 
 function DetailPanel({ row }: { row: AnnualRow }) {
   const totalTax = row.incomeTax + row.residentTax + row.socialInsurance + row.pensionContribution
+  const totalMutual = row.smallBusinessMutual + row.bankruptcyMutual
   const netWorth = row.endingAssets - row.loanBalance
 
   const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome
-  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + row.investmentContribution
+  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + totalMutual + row.investmentContribution
 
   const incomeItems = [
     { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
@@ -51,26 +52,6 @@ function DetailPanel({ row }: { row: AnnualRow }) {
     ...(row.dividendIncome > 0 ? [
       { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
     ] : []),
-  ]
-
-  const expenseItems = [
-    ...(row.businessExpenses > 0 ? [
-      { label: '経費', value: `-${fmtM(row.businessExpenses)}`, color: 'text-gray-600' },
-    ] : []),
-    { label: '所得税', value: `-${fmtM(row.incomeTax)}`, color: 'text-orange-500' },
-    { label: '住民税', value: `-${fmtM(row.residentTax)}`, color: 'text-orange-500' },
-    ...(row.socialInsuranceBreakdown ? [
-      { label: '健康保険', value: `-${fmtM(row.socialInsuranceBreakdown.healthInsurance)}`, color: 'text-orange-400' },
-      { label: '年金', value: `-${fmtM(row.socialInsuranceBreakdown.pension + row.pensionContribution)}`, color: 'text-orange-400' },
-      ...(row.socialInsuranceBreakdown.employmentInsurance > 0 ? [{ label: '雇用保険', value: `-${fmtM(row.socialInsuranceBreakdown.employmentInsurance)}`, color: 'text-orange-400' }] : []),
-    ] : [
-      { label: '社会保険', value: `-${fmtM(row.socialInsurance + row.pensionContribution)}`, color: 'text-orange-400' },
-    ]),
-    { label: '税・社保 合計', value: `-${fmtM(totalTax)}`, color: 'text-orange-600 font-medium' },
-    { label: 'ローン返済', value: `-${fmtM(row.loanRepaymentAnnual)}`, color: 'text-red-600' },
-    { label: '住宅費', value: `-${fmtM(row.housingTaxAnnual)}`, color: 'text-red-500' },
-    { label: '生活費', value: `-${fmtM(row.livingCostAnnual)}`, color: 'text-red-500' },
-    { label: '投資積立', value: row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-', color: 'text-blue-600' },
   ]
 
   return (
@@ -90,12 +71,94 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 font-semibold text-green-800">収入合計</td>
               <td className="py-1 text-right font-semibold text-green-800">{fmtM(totalIncome)} 万円/月</td>
             </tr>
-            {expenseItems.map(({ label, value, color }) => (
-              <tr key={label} className="border-b border-gray-100">
-                <td className="py-1 text-gray-500">{label}</td>
-                <td className={`py-1 text-right ${color}`}>{value} 万円/月</td>
+
+            {/* 経費 */}
+            {row.businessExpenses > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 text-gray-500">経費</td>
+                <td className="py-1 text-right text-gray-600">-{fmtM(row.businessExpenses)} 万円/月</td>
               </tr>
-            ))}
+            )}
+
+            {/* 税・社保カテゴリ */}
+            <tr className="border-b border-orange-200 bg-orange-50">
+              <td className="py-1 font-medium text-orange-800">税・社保</td>
+              <td className="py-1 text-right font-medium text-orange-800">-{fmtM(totalTax)} 万円/月</td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-1 pl-4 text-gray-400">所得税</td>
+              <td className="py-1 text-right text-orange-500">-{fmtM(row.incomeTax)} 万円/月</td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-1 pl-4 text-gray-400">住民税</td>
+              <td className="py-1 text-right text-orange-500">-{fmtM(row.residentTax)} 万円/月</td>
+            </tr>
+            {row.socialInsuranceBreakdown ? (
+              <>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 pl-4 text-gray-400">健康保険</td>
+                  <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.healthInsurance)} 万円/月</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 pl-4 text-gray-400">年金</td>
+                  <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
+                </tr>
+                {row.socialInsuranceBreakdown.employmentInsurance > 0 && (
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1 pl-4 text-gray-400">雇用保険</td>
+                    <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
+                  </tr>
+                )}
+              </>
+            ) : (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-4 text-gray-400">社会保険</td>
+                <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsurance + row.pensionContribution)} 万円/月</td>
+              </tr>
+            )}
+
+            {/* その他支出 */}
+            <tr className="border-b border-gray-100">
+              <td className="py-1 text-gray-500">ローン返済</td>
+              <td className="py-1 text-right text-red-600">-{fmtM(row.loanRepaymentAnnual)} 万円/月</td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-1 text-gray-500">住宅費</td>
+              <td className="py-1 text-right text-red-500">-{fmtM(row.housingTaxAnnual)} 万円/月</td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-1 text-gray-500">生活費</td>
+              <td className="py-1 text-right text-red-500">-{fmtM(row.livingCostAnnual)} 万円/月</td>
+            </tr>
+
+            {/* 共済掛金カテゴリ */}
+            {totalMutual > 0 && (
+              <>
+                <tr className="border-b border-purple-200 bg-purple-50">
+                  <td className="py-1 font-medium text-purple-800">共済掛金</td>
+                  <td className="py-1 text-right font-medium text-purple-800">-{fmtM(totalMutual)} 万円/月</td>
+                </tr>
+                {row.bankruptcyMutual > 0 && (
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1 pl-4 text-gray-400">倒産防止共済</td>
+                    <td className="py-1 text-right text-purple-600">-{fmtM(row.bankruptcyMutual)} 万円/月</td>
+                  </tr>
+                )}
+                {row.smallBusinessMutual > 0 && (
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1 pl-4 text-gray-400">小規模企業共済</td>
+                    <td className="py-1 text-right text-purple-600">-{fmtM(row.smallBusinessMutual)} 万円/月</td>
+                  </tr>
+                )}
+              </>
+            )}
+
+            {/* 投資積立 */}
+            <tr className="border-b border-gray-100">
+              <td className="py-1 text-gray-500">投資積立</td>
+              <td className="py-1 text-right text-blue-600">{row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-'} 万円/月</td>
+            </tr>
+
             <tr className="border-b border-red-300 bg-red-50">
               <td className="py-1 font-semibold text-red-800">支出合計</td>
               <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalExpense)} 万円/月</td>
