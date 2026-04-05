@@ -24,7 +24,7 @@ function AssetBar({ label, value, total, color }: { label: string; value: number
     <div className="space-y-0.5">
       <div className="flex justify-between text-xs">
         <span className="text-gray-600">{label}</span>
-        <span className="font-medium">{fmt(value)} 万円</span>
+        <span className="font-medium text-gray-900">{fmt(value)} 万円</span>
       </div>
       <div className="w-full bg-gray-100 rounded-full h-1.5">
         <div className={`${color} h-1.5 rounded-full`} style={{ width: `${pct}%` }} />
@@ -226,7 +226,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             <AssetBar label="課税口座" value={row.endingLiquidAssets} total={row.endingAssets} color="bg-purple-400" />
           )}
           <div className="border-t border-gray-200 pt-2 space-y-1 text-xs">
-            <div className="flex justify-between font-semibold">
+            <div className="flex justify-between font-semibold text-gray-900">
               <span>総資産</span>
               <span>{fmt(row.endingAssets)} 万円</span>
             </div>
@@ -245,15 +245,15 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             <div className="border-t border-purple-200 pt-2 mt-2 space-y-1 text-xs">
               <p className="font-semibold text-purple-800">共済積立累計（別枠）</p>
               {row.bankruptcyMutualAccumulated > 0 && (
-                <div className="flex justify-between text-purple-700">
-                  <span>倒産防止共済</span>
-                  <span>{fmt(row.bankruptcyMutualAccumulated)} 万円</span>
+                <div className="flex justify-between">
+                  <span className="text-purple-700">倒産防止共済</span>
+                  <span className="text-purple-700">{fmt(row.bankruptcyMutualAccumulated)} 万円</span>
                 </div>
               )}
               {row.smallBusinessMutualAccumulated > 0 && (
-                <div className="flex justify-between text-purple-700">
-                  <span>小規模企業共済</span>
-                  <span>{fmt(row.smallBusinessMutualAccumulated)} 万円</span>
+                <div className="flex justify-between">
+                  <span className="text-purple-700">小規模企業共済</span>
+                  <span className="text-purple-700">{fmt(row.smallBusinessMutualAccumulated)} 万円</span>
                 </div>
               )}
             </div>
