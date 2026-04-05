@@ -79,6 +79,19 @@ export function setCurrentScenarioId(id: string): void {
   save(data)
 }
 
+export function reorderScenario(id: string, direction: 'up' | 'down'): void {
+  const data = load()
+  if (!data) return
+  const idx = data.scenarios.findIndex((s) => s.id === id)
+  if (idx < 0) return
+  const newIdx = direction === 'up' ? idx - 1 : idx + 1
+  if (newIdx < 0 || newIdx >= data.scenarios.length) return
+  const arr = [...data.scenarios]
+  ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+  data.scenarios = arr
+  save(data)
+}
+
 export function deleteScenario(id: string): void {
   const data = load()
   if (!data) return

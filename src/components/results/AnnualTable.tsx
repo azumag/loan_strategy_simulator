@@ -37,11 +37,23 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   const totalTax = row.incomeTax + row.residentTax + row.socialInsurance + row.pensionContribution
   const netWorth = row.endingAssets - row.loanBalance
 
-  const monthlyItems = [
+  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome
+  const totalExpense = totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + row.investmentContribution
+
+  const incomeItems = [
     { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
     ...(row.spouseNetIncome > 0 ? [
       { label: '収入（配偶者・手取）', value: `+${fmtM(row.spouseNetIncome)}`, color: 'text-teal-600' },
     ] : []),
+    ...(row.retirementDrawdown > 0 ? [
+      { label: '資産取り崩し', value: `+${fmtM(row.retirementDrawdown)}`, color: 'text-orange-600' },
+    ] : []),
+    ...(row.dividendIncome > 0 ? [
+      { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
+    ] : []),
+  ]
+
+  const expenseItems = [
     { label: '所得税', value: `-${fmtM(row.incomeTax)}`, color: 'text-orange-500' },
     { label: '住民税', value: `-${fmtM(row.residentTax)}`, color: 'text-orange-500' },
     ...(row.socialInsuranceBreakdown ? [
@@ -56,17 +68,6 @@ function DetailPanel({ row }: { row: AnnualRow }) {
     { label: '住宅費', value: `-${fmtM(row.housingTaxAnnual)}`, color: 'text-red-500' },
     { label: '生活費', value: `-${fmtM(row.livingCostAnnual)}`, color: 'text-red-500' },
     { label: '投資積立', value: row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-', color: 'text-blue-600' },
-    ...(row.retirementDrawdown > 0 ? [
-      { label: '資産取り崩し', value: `+${fmtM(row.retirementDrawdown)}`, color: 'text-orange-600' },
-    ] : []),
-    ...(row.dividendIncome > 0 ? [
-      { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
-    ] : []),
-    {
-      label: '月次収支',
-      value: `${fmtM(row.netCashflow) >= 0 ? '+' : ''}${fmtM(row.netCashflow)}`,
-      color: row.netCashflow >= 0 ? 'text-green-700 font-semibold' : 'text-red-700 font-semibold',
-    },
   ]
 
   return (
@@ -76,12 +77,32 @@ function DetailPanel({ row }: { row: AnnualRow }) {
         <p className="text-xs font-semibold text-gray-700 mb-2">月次収支内訳（年÷12 概算）</p>
         <table className="w-full text-xs">
           <tbody>
-            {monthlyItems.map(({ label, value, color }) => (
-              <tr key={label} className="border-b border-gray-100 last:border-0">
+            {incomeItems.map(({ label, value, color }) => (
+              <tr key={label} className="border-b border-gray-100">
                 <td className="py-1 text-gray-500">{label}</td>
                 <td className={`py-1 text-right ${color}`}>{value} 万円/月</td>
               </tr>
             ))}
+            <tr className="border-b border-green-300 bg-green-50">
+              <td className="py-1 font-semibold text-green-800">収入合計</td>
+              <td className="py-1 text-right font-semibold text-green-800">{fmtM(totalIncome)} 万円/月</td>
+            </tr>
+            {expenseItems.map(({ label, value, color }) => (
+              <tr key={label} className="border-b border-gray-100">
+                <td className="py-1 text-gray-500">{label}</td>
+                <td className={`py-1 text-right ${color}`}>{value} 万円/月</td>
+              </tr>
+            ))}
+            <tr className="border-b border-red-300 bg-red-50">
+              <td className="py-1 font-semibold text-red-800">支出合計</td>
+              <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalExpense)} 万円/月</td>
+            </tr>
+            <tr className="border-t-2 border-gray-300">
+              <td className="py-1 font-semibold text-gray-800">月次収支</td>
+              <td className={`py-1 text-right font-semibold ${row.netCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                {fmtM(row.netCashflow) >= 0 ? '+' : ''}{fmtM(row.netCashflow)} 万円/月
+              </td>
+            </tr>
           </tbody>
         </table>
         {row.specialCashflow !== 0 && (

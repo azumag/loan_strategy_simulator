@@ -6,6 +6,7 @@ import {
   loadScenarioById,
   listScenarios,
   deleteScenario,
+  reorderScenario,
   getCurrentScenarioId,
 } from '../../store/storage'
 
@@ -56,6 +57,12 @@ export function ScenarioManager() {
     }
   }
 
+  // 順番変更
+  const handleReorder = (id: string, direction: 'up' | 'down') => {
+    reorderScenario(id, direction)
+    refresh()
+  }
+
   // シナリオを削除
   const handleDelete = (id: string, name: string) => {
     if (!confirm(`「${name}」を削除しますか？`)) return
@@ -104,14 +111,30 @@ export function ScenarioManager() {
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">保存済みシナリオ</h3>
           <ul className="space-y-2">
-            {savedList.map((s) => {
+            {savedList.map((s, i) => {
               const isActive = s.id === activeId
               return (
                 <li
                   key={s.id}
                   className={`flex items-center justify-between px-3 py-2 rounded-lg border ${isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}
                 >
+                  {/* 上下ボタン */}
+                  <div className="flex flex-col mr-2 shrink-0">
+                    <button
+                      onClick={() => handleReorder(s.id, 'up')}
+                      disabled={i === 0}
+                      className="text-gray-400 hover:text-gray-700 disabled:opacity-20 leading-none"
+                      title="上に移動"
+                    >▲</button>
+                    <button
+                      onClick={() => handleReorder(s.id, 'down')}
+                      disabled={i === savedList.length - 1}
+                      className="text-gray-400 hover:text-gray-700 disabled:opacity-20 leading-none"
+                      title="下に移動"
+                    >▼</button>
+                  </div>
                   <span className={`text-sm flex-1 truncate ${isActive ? 'font-semibold text-blue-700' : 'text-gray-700'}`}>
+                    {i === 0 && <span className="mr-1 text-xs text-orange-500 font-normal">自動ロード</span>}
                     {isActive && <span className="mr-1 text-blue-500">●</span>}
                     {s.name || '（名称未設定）'}
                   </span>
