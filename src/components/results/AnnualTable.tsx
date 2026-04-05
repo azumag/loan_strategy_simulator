@@ -214,6 +214,23 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <span>{netWorth >= 0 ? '' : '−'}{fmt(Math.abs(netWorth))} 万円</span>
             </div>
           </div>
+          {(row.smallBusinessMutualAccumulated > 0 || row.bankruptcyMutualAccumulated > 0) && (
+            <div className="border-t border-purple-200 pt-2 mt-2 space-y-1 text-xs">
+              <p className="font-semibold text-purple-800">共済積立累計（別枠）</p>
+              {row.bankruptcyMutualAccumulated > 0 && (
+                <div className="flex justify-between text-purple-700">
+                  <span>倒産防止共済</span>
+                  <span>{fmt(row.bankruptcyMutualAccumulated)} 万円</span>
+                </div>
+              )}
+              {row.smallBusinessMutualAccumulated > 0 && (
+                <div className="flex justify-between text-purple-700">
+                  <span>小規模企業共済</span>
+                  <span>{fmt(row.smallBusinessMutualAccumulated)} 万円</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

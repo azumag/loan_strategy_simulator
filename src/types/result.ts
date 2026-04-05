@@ -31,6 +31,8 @@ export interface AnnualRow {
   }
   smallBusinessMutual: number
   bankruptcyMutual: number
+  smallBusinessMutualAccumulated: number
+  bankruptcyMutualAccumulated: number
   /** 共済受取額（解約・廃業時の一括or分割入金、税引後） */
   mutualAidPayoutNet: number
   loanRepaymentAnnual: number

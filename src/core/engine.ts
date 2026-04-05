@@ -381,6 +381,8 @@ export function simulate(scenario: Scenario): SimulationResult {
       socialInsuranceBreakdown,
       smallBusinessMutual,
       bankruptcyMutual,
+      smallBusinessMutualAccumulated,
+      bankruptcyMutualAccumulated,
       mutualAidPayoutNet,
       loanRepaymentAnnual,
       housingTaxAnnual,
