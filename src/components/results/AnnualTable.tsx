@@ -264,7 +264,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   )
 }
 
-const COL_COUNT = 19
+const COL_COUNT = 12
 
 export function AnnualTable() {
   const { result } = useScenario()
@@ -274,35 +274,36 @@ export function AnnualTable() {
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">年次シミュレーション結果</h2>
-      <p className="text-xs text-gray-500 px-4 pb-2">単位: 万円　※行をクリックすると月次詳細・資産内訳を表示</p>
+      <p className="text-xs text-gray-500 px-4 pb-2">単位: 万円　※行をクリックすると詳細を表示</p>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="bg-gray-100 sticky top-0">
             <tr>
-              <th className="px-3 py-2 text-left whitespace-nowrap">年齢</th>
-              <th className="px-3 py-2 text-left whitespace-nowrap">雇用形態</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">総収入</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">配偶者収入</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">税・社保</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">ローン返済</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">住宅費</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">生活費</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">共済掛金</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">特別CF</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">収支（積立前）</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">投資積立</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">取り崩し</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">配当</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">現金残高</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">NISA</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">課税口座</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">総資産</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">ローン残債</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">年齢</th>
+              <th className="px-2 py-2 text-left whitespace-nowrap">形態</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">総収入</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">税・社保</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">ローン</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">住宅費</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">生活費</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">収支</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">現金残高</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">投資残高</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">総資産</th>
+              <th className="px-2 py-2 text-right whitespace-nowrap">ローン残債</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => {
               const totalTax = row.incomeTax + row.residentTax + row.businessTax + row.socialInsurance + row.pensionContribution
+              const totalMutual = row.smallBusinessMutual + row.bankruptcyMutual
+              const investmentBalance = row.endingNisaBalance + row.endingLiquidAssets
+              // 収支 = 入るお金 - 出ていくお金 - 貯めるお金
+              const totalOutgoing = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + (row.specialCashflow < 0 ? -row.specialCashflow : 0)
+              const specialIncome = row.specialCashflow > 0 ? row.specialCashflow : 0
+              const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome
+              const totalSavings = totalMutual + row.investmentContribution
+              const netTotal = totalIncome - totalOutgoing - totalSavings
               const isHighlight = row.age === 60 || row.age === 65 || row.age === summary.payoffAge
               const isExpanded = expandedAge === row.age
 
@@ -313,49 +314,28 @@ export function AnnualTable() {
                     className={`border-t border-gray-100 cursor-pointer hover:brightness-95 transition-all ${rowClass(row, summary.payoffAge)} ${isHighlight ? 'border-l-4 border-l-blue-400' : ''} ${isExpanded ? 'border-b-0' : ''}`}
                     onClick={() => setExpandedAge(isExpanded ? null : row.age)}
                   >
-                    <td className="px-3 py-1.5 whitespace-nowrap">
+                    <td className="px-2 py-1.5 whitespace-nowrap">
                       <span className="mr-1 text-gray-400">{isExpanded ? '▼' : '▶'}</span>
                       {row.age}歳
                       {row.age === summary.payoffAge && <span className="ml-1 text-xs text-green-600">完済</span>}
                     </td>
-                    <td className="px-3 py-1.5 whitespace-nowrap text-gray-600">{WORK_STYLE_LABEL[row.workStyle] ?? row.workStyle}</td>
-                    <td className="px-3 py-1.5 text-right">{fmt(row.grossIncome)}</td>
-                    <td className="px-3 py-1.5 text-right text-teal-600">
-                      {row.spouseNetIncome > 0 ? fmt(row.spouseNetIncome) : '-'}
+                    <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{WORK_STYLE_LABEL[row.workStyle] ?? row.workStyle}</td>
+                    <td className="px-2 py-1.5 text-right">{fmt(row.grossIncome)}</td>
+                    <td className="px-2 py-1.5 text-right text-orange-700">{fmt(totalTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-red-700">{fmt(row.loanRepaymentAnnual)}</td>
+                    <td className="px-2 py-1.5 text-right text-red-600">{fmt(row.housingTaxAnnual)}</td>
+                    <td className="px-2 py-1.5 text-right text-red-600">{fmt(row.livingCostAnnual)}</td>
+                    <td className={`px-2 py-1.5 text-right font-medium ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                      {netTotal > 0 ? '+' : ''}{fmt(netTotal)}
                     </td>
-                    <td className="px-3 py-1.5 text-right text-orange-700">{fmt(totalTax)}</td>
-                    <td className="px-3 py-1.5 text-right text-red-700">{fmt(row.loanRepaymentAnnual)}</td>
-                    <td className="px-3 py-1.5 text-right text-red-600">{fmt(row.housingTaxAnnual)}</td>
-                    <td className="px-3 py-1.5 text-right text-red-600">{fmt(row.livingCostAnnual)}</td>
-                    <td className="px-3 py-1.5 text-right text-purple-700">
-                      {(row.smallBusinessMutual + row.bankruptcyMutual) > 0 ? fmt(row.smallBusinessMutual + row.bankruptcyMutual) : '-'}
-                    </td>
-                    <td className={`px-3 py-1.5 text-right ${row.specialCashflow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {row.specialCashflow !== 0 ? (row.specialCashflow > 0 ? '+' : '') + fmt(row.specialCashflow) : '-'}
-                    </td>
-                    <td className={`px-3 py-1.5 text-right font-medium ${row.netCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                      {row.netCashflow > 0 ? '+' : ''}{fmt(row.netCashflow)}
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-blue-600">
-                      {row.investmentContribution > 0 ? fmt(row.investmentContribution) : '-'}
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-orange-600">
-                      {row.retirementDrawdown > 0 ? fmt(row.retirementDrawdown) : '-'}
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-yellow-600">
-                      {row.dividendIncome > 0 ? fmt(row.dividendIncome) : '-'}
-                    </td>
-                    <td className="px-3 py-1.5 text-right font-semibold text-gray-900">
+                    <td className="px-2 py-1.5 text-right font-semibold text-gray-900">
                       {fmt(row.endingCash)}
                     </td>
-                    <td className="px-3 py-1.5 text-right text-green-700">
-                      {row.endingNisaBalance > 0 ? fmt(row.endingNisaBalance) : '-'}
+                    <td className="px-2 py-1.5 text-right text-green-700">
+                      {investmentBalance > 0 ? fmt(investmentBalance) : '-'}
                     </td>
-                    <td className="px-3 py-1.5 text-right text-purple-700">
-                      {row.endingLiquidAssets > 0 ? fmt(row.endingLiquidAssets) : '-'}
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-gray-700">{fmt(row.endingAssets)}</td>
-                    <td className="px-3 py-1.5 text-right text-gray-600">{fmt(row.loanBalance)}</td>
+                    <td className="px-2 py-1.5 text-right text-gray-700">{fmt(row.endingAssets)}</td>
+                    <td className="px-2 py-1.5 text-right text-gray-600">{fmt(row.loanBalance)}</td>
                   </tr>
                   {isExpanded && (
                     <tr key={`detail-${row.age}`} className="border-b border-blue-200">
