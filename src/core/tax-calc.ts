@@ -173,8 +173,10 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
   const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000) // 均等割概算含む
 
-  // 個人事業税: 事業所得290万超の部分×5%概算（住民税とは別税）
-  const businessTaxBase = Math.max(0, stage.grossRevenueAnnual - stage.businessExpenseAnnual - 2_900_000)
+  // 個人事業税: 対象外職種の場合はゼロ、それ以外は事業所得290万超の部分×5%概算
+  const businessTaxBase = stage.exemptFromBusinessTax
+    ? 0
+    : Math.max(0, stage.grossRevenueAnnual - stage.businessExpenseAnnual - 2_900_000)
   const businessTax = businessTaxBase * 0.05
 
   const totalTaxBurden =
@@ -391,8 +393,10 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
   const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000)
 
-  // 個人事業税（個人事業所得290万超の部分×5%）
-  const businessTaxBase = Math.max(0, soloNetIncome - 2_900_000)
+  // 個人事業税（対象外職種の場合はゼロ、それ以外は個人事業所得290万超の部分×5%）
+  const businessTaxBase = stage.exemptFromBusinessTax
+    ? 0
+    : Math.max(0, soloNetIncome - 2_900_000)
   const businessTax = businessTaxBase * 0.05
 
   const grossIncome = soloNetIncome + directorCompensation + corporateRetainedEarnings

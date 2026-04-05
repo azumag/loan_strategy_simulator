@@ -16,6 +16,7 @@ export interface SelfEmployedStage extends BaseCareerStage {
   smallBusinessMutualAnnual: number
   bankruptcyMutualAnnual: number
   sideIncomeAnnual: number
+  exemptFromBusinessTax?: boolean  // 個人事業税の対象外職種（弁護士・コンサル等）
 }
 
 export interface EmployeeStage extends BaseCareerStage {
@@ -52,6 +53,7 @@ export interface MicroCorporationStage extends BaseCareerStage {
   // ── 共済（個人事業主として加入） ──
   smallBusinessMutualAnnual: number
   bankruptcyMutualAnnual: number
+  exemptFromBusinessTax?: boolean  // 個人事業税の対象外職種
 }
 
 export type CareerStage = SelfEmployedStage | EmployeeStage | RetiredStage | MicroCorporationStage

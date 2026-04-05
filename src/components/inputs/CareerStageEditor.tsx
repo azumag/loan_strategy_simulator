@@ -161,6 +161,15 @@ function CareerStageList({
                   onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={20} step={1} unit="万円/月" />
               </div>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!stage.exemptFromBusinessTax}
+                  onChange={(e) => onUpdate(i, { exemptFromBusinessTax: e.target.checked })}
+                  className="rounded"
+                />
+                個人事業税を除外（対象外の職種・業種）
+              </label>
             </div>
           )}
 
@@ -205,6 +214,15 @@ function CareerStageList({
                   onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={20} step={1} unit="万円/月" />
               </div>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!stage.exemptFromBusinessTax}
+                  onChange={(e) => onUpdate(i, { exemptFromBusinessTax: e.target.checked })}
+                  className="rounded"
+                />
+                個人事業税を除外（対象外の職種・業種）
+              </label>
             </div>
           )}
 
