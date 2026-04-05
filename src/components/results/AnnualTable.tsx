@@ -38,8 +38,11 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   const totalMutual = row.smallBusinessMutual + row.bankruptcyMutual
   const netWorth = row.endingAssets - row.loanBalance
 
-  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome
-  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + totalMutual + row.investmentContribution
+  const specialIncome = row.specialCashflow > 0 ? row.specialCashflow : 0
+  const specialExpense = row.specialCashflow < 0 ? -row.specialCashflow : 0
+  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome
+  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + totalMutual + row.investmentContribution + specialExpense
+  const displayedNetCashflow = totalIncome - totalExpense
 
   const incomeItems = [
     { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
@@ -51,6 +54,9 @@ function DetailPanel({ row }: { row: AnnualRow }) {
     ] : []),
     ...(row.dividendIncome > 0 ? [
       { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
+    ] : []),
+    ...(specialIncome > 0 ? [
+      { label: '特別収入', value: `+${fmtM(specialIncome)}`, color: 'text-green-600' },
     ] : []),
   ]
 
@@ -159,23 +165,26 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 text-right text-blue-600">{row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-'} 万円/月</td>
             </tr>
 
+            {/* 特別支出 */}
+            {specialExpense > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 text-gray-500">特別支出</td>
+                <td className="py-1 text-right text-red-600">-{fmtM(specialExpense)} 万円/月</td>
+              </tr>
+            )}
+
             <tr className="border-b border-red-300 bg-red-50">
               <td className="py-1 font-semibold text-red-800">支出合計</td>
               <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalExpense)} 万円/月</td>
             </tr>
             <tr className="border-t-2 border-gray-300">
               <td className="py-1 font-semibold text-gray-800">月次収支</td>
-              <td className={`py-1 text-right font-semibold ${row.netCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                {fmtM(row.netCashflow) >= 0 ? '+' : ''}{fmtM(row.netCashflow)} 万円/月
+              <td className={`py-1 text-right font-semibold ${displayedNetCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                {displayedNetCashflow >= 0 ? '+' : ''}{fmtM(displayedNetCashflow)} 万円/月
               </td>
             </tr>
           </tbody>
         </table>
-        {row.specialCashflow !== 0 && (
-          <p className={`text-xs mt-1 ${row.specialCashflow > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            ※ 特別CF {row.specialCashflow > 0 ? '+' : ''}{fmt(row.specialCashflow)} 万円（年間）を含む
-          </p>
-        )}
       </div>
 
       {/* 総資産内訳 */}
