@@ -134,12 +134,12 @@ export function simulate(scenario: Scenario): SimulationResult {
         // 倒産防止共済の実効拠出額（累計800万円上限を適用）
         const remainingBankruptcyCap = Math.max(0, BANKRUPTCY_MUTUAL_TOTAL_MAX - bankruptcyMutualAccumulated)
         const effectiveBankruptcy = Math.min(
-          stage.bankruptcyMutualAnnual,
+          stage.bankruptcyMutualAnnual ?? 0,
           BANKRUPTCY_MUTUAL_ANNUAL_MAX,
           remainingBankruptcyCap,
         )
         // 小規模企業共済の実効拠出額
-        const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
+        const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
         // 実効額でステージを上書きして税計算
         const resolvedStage = {
@@ -168,11 +168,11 @@ export function simulate(scenario: Scenario): SimulationResult {
         // 倒産防止共済の実効拠出額（累計800万円上限を適用）
         const remainingBankruptcyCap = Math.max(0, BANKRUPTCY_MUTUAL_TOTAL_MAX - bankruptcyMutualAccumulated)
         const effectiveBankruptcy = Math.min(
-          stage.bankruptcyMutualAnnual,
+          stage.bankruptcyMutualAnnual ?? 0,
           BANKRUPTCY_MUTUAL_ANNUAL_MAX,
           remainingBankruptcyCap,
         )
-        const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
+        const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
         const resolvedStage = {
           ...stage,

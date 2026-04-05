@@ -40,25 +40,15 @@ function DetailPanel({ row }: { row: AnnualRow }) {
 
   const specialIncome = row.specialCashflow > 0 ? row.specialCashflow : 0
   const specialExpense = row.specialCashflow < 0 ? -row.specialCashflow : 0
-  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome
-  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + totalMutual + row.investmentContribution + specialExpense
-  const displayedNetCashflow = totalIncome - totalExpense
 
-  const incomeItems = [
-    { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
-    ...(row.spouseNetIncome > 0 ? [
-      { label: '収入（配偶者・手取）', value: `+${fmtM(row.spouseNetIncome)}`, color: 'text-teal-600' },
-    ] : []),
-    ...(row.retirementDrawdown > 0 ? [
-      { label: '資産取り崩し', value: `+${fmtM(row.retirementDrawdown)}`, color: 'text-orange-600' },
-    ] : []),
-    ...(row.dividendIncome > 0 ? [
-      { label: '配当収入（税引後）', value: `+${fmtM(row.dividendIncome)}`, color: 'text-yellow-600' },
-    ] : []),
-    ...(specialIncome > 0 ? [
-      { label: '特別収入', value: `+${fmtM(specialIncome)}`, color: 'text-green-600' },
-    ] : []),
-  ]
+  // 入るお金
+  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome
+  // 出ていくお金（税・ローン・住宅費・生活費・特別支出）
+  const totalOutgoing = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + specialExpense
+  // 貯めるお金（共済掛金 + 投資積立）
+  const totalSavings = totalMutual + row.investmentContribution
+  // 最終合計
+  const netTotal = totalIncome - totalOutgoing - totalSavings
 
   return (
     <div className="bg-gray-50 border-t border-blue-200 px-4 py-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -67,126 +57,157 @@ function DetailPanel({ row }: { row: AnnualRow }) {
         <p className="text-xs font-semibold text-gray-700 mb-2">月次収支内訳（年÷12 概算）</p>
         <table className="w-full text-xs">
           <tbody>
-            {incomeItems.map(({ label, value, color }) => (
-              <tr key={label} className="border-b border-gray-100">
-                <td className="py-1 text-gray-500">{label}</td>
-                <td className={`py-1 text-right ${color}`}>{value} 万円/月</td>
+            {/* ── 入るお金 ── */}
+            <tr className="bg-green-50">
+              <td className="py-1 font-semibold text-green-800" colSpan={2}>入るお金</td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-1 pl-3 text-gray-500">収入（本人）</td>
+              <td className="py-1 text-right text-green-700">+{fmtM(row.grossIncome)} 万円/月</td>
+            </tr>
+            {row.spouseNetIncome > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-3 text-gray-500">収入（配偶者・手取）</td>
+                <td className="py-1 text-right text-teal-600">+{fmtM(row.spouseNetIncome)} 万円/月</td>
               </tr>
-            ))}
-            <tr className="border-b border-green-300 bg-green-50">
-              <td className="py-1 font-semibold text-green-800">収入合計</td>
-              <td className="py-1 text-right font-semibold text-green-800">{fmtM(totalIncome)} 万円/月</td>
+            )}
+            {row.retirementDrawdown > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-3 text-gray-500">資産取り崩し</td>
+                <td className="py-1 text-right text-orange-600">+{fmtM(row.retirementDrawdown)} 万円/月</td>
+              </tr>
+            )}
+            {row.dividendIncome > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-3 text-gray-500">配当収入（税引後）</td>
+                <td className="py-1 text-right text-yellow-600">+{fmtM(row.dividendIncome)} 万円/月</td>
+              </tr>
+            )}
+            {specialIncome > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-3 text-gray-500">特別収入</td>
+                <td className="py-1 text-right text-green-600">+{fmtM(specialIncome)} 万円/月</td>
+              </tr>
+            )}
+            <tr className="border-b-2 border-green-300">
+              <td className="py-1 font-semibold text-green-800 pl-1">合計</td>
+              <td className="py-1 text-right font-semibold text-green-800">+{fmtM(totalIncome)} 万円/月</td>
             </tr>
 
-            {/* 経費 */}
+            {/* ── 出ていくお金 ── */}
+            <tr className="bg-red-50 mt-1">
+              <td className="py-1 font-semibold text-red-800 pt-2" colSpan={2}>出ていくお金</td>
+            </tr>
             {row.businessExpenses > 0 && (
               <tr className="border-b border-gray-100">
-                <td className="py-1 text-gray-500">経費</td>
+                <td className="py-1 pl-3 text-gray-500">経費</td>
                 <td className="py-1 text-right text-gray-600">-{fmtM(row.businessExpenses)} 万円/月</td>
               </tr>
             )}
-
-            {/* 税・社保カテゴリ */}
-            <tr className="border-b border-orange-200 bg-orange-50">
-              <td className="py-1 font-medium text-orange-800">税・社保</td>
+            <tr className="border-b border-orange-100 bg-orange-50/50">
+              <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
               <td className="py-1 text-right font-medium text-orange-800">-{fmtM(totalTax)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
-              <td className="py-1 pl-4 text-gray-400">所得税</td>
+              <td className="py-1 pl-6 text-gray-400">所得税</td>
               <td className="py-1 text-right text-orange-500">-{fmtM(row.incomeTax)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
-              <td className="py-1 pl-4 text-gray-400">住民税</td>
+              <td className="py-1 pl-6 text-gray-400">住民税</td>
               <td className="py-1 text-right text-orange-500">-{fmtM(row.residentTax)} 万円/月</td>
             </tr>
             {row.businessTax > 0 && (
               <tr className="border-b border-gray-100">
-                <td className="py-1 pl-4 text-gray-400">個人事業税</td>
+                <td className="py-1 pl-6 text-gray-400">個人事業税</td>
                 <td className="py-1 text-right text-orange-500">-{fmtM(row.businessTax)} 万円/月</td>
               </tr>
             )}
             {row.socialInsuranceBreakdown ? (
               <>
                 <tr className="border-b border-gray-100">
-                  <td className="py-1 pl-4 text-gray-400">健康保険</td>
+                  <td className="py-1 pl-6 text-gray-400">健康保険</td>
                   <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.healthInsurance)} 万円/月</td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="py-1 pl-4 text-gray-400">年金</td>
+                  <td className="py-1 pl-6 text-gray-400">年金</td>
                   <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
                 </tr>
                 {row.socialInsuranceBreakdown.employmentInsurance > 0 && (
                   <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-4 text-gray-400">雇用保険</td>
+                    <td className="py-1 pl-6 text-gray-400">雇用保険</td>
                     <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
                   </tr>
                 )}
               </>
             ) : (
               <tr className="border-b border-gray-100">
-                <td className="py-1 pl-4 text-gray-400">社会保険</td>
+                <td className="py-1 pl-6 text-gray-400">社会保険</td>
                 <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsurance + row.pensionContribution)} 万円/月</td>
               </tr>
             )}
-
-            {/* その他支出 */}
             <tr className="border-b border-gray-100">
-              <td className="py-1 text-gray-500">ローン返済</td>
+              <td className="py-1 pl-3 text-gray-500">ローン返済</td>
               <td className="py-1 text-right text-red-600">-{fmtM(row.loanRepaymentAnnual)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
-              <td className="py-1 text-gray-500">住宅費</td>
+              <td className="py-1 pl-3 text-gray-500">住宅費</td>
               <td className="py-1 text-right text-red-500">-{fmtM(row.housingTaxAnnual)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
-              <td className="py-1 text-gray-500">生活費</td>
+              <td className="py-1 pl-3 text-gray-500">生活費</td>
               <td className="py-1 text-right text-red-500">-{fmtM(row.livingCostAnnual)} 万円/月</td>
             </tr>
-
-            {/* 共済掛金カテゴリ */}
-            {totalMutual > 0 && (
-              <>
-                <tr className="border-b border-purple-200 bg-purple-50">
-                  <td className="py-1 font-medium text-purple-800">共済掛金</td>
-                  <td className="py-1 text-right font-medium text-purple-800">-{fmtM(totalMutual)} 万円/月</td>
-                </tr>
-                {row.bankruptcyMutual > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-4 text-gray-400">倒産防止共済</td>
-                    <td className="py-1 text-right text-purple-600">-{fmtM(row.bankruptcyMutual)} 万円/月</td>
-                  </tr>
-                )}
-                {row.smallBusinessMutual > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-4 text-gray-400">小規模企業共済</td>
-                    <td className="py-1 text-right text-purple-600">-{fmtM(row.smallBusinessMutual)} 万円/月</td>
-                  </tr>
-                )}
-              </>
-            )}
-
-            {/* 投資積立 */}
-            <tr className="border-b border-gray-100">
-              <td className="py-1 text-gray-500">投資積立</td>
-              <td className="py-1 text-right text-blue-600">{row.investmentContribution > 0 ? `-${fmtM(row.investmentContribution)}` : '-'} 万円/月</td>
-            </tr>
-
-            {/* 特別支出 */}
             {specialExpense > 0 && (
               <tr className="border-b border-gray-100">
-                <td className="py-1 text-gray-500">特別支出</td>
+                <td className="py-1 pl-3 text-gray-500">特別支出</td>
                 <td className="py-1 text-right text-red-600">-{fmtM(specialExpense)} 万円/月</td>
               </tr>
             )}
-
-            <tr className="border-b border-red-300 bg-red-50">
-              <td className="py-1 font-semibold text-red-800">支出合計</td>
-              <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalExpense)} 万円/月</td>
+            <tr className="border-b-2 border-red-300">
+              <td className="py-1 font-semibold text-red-800 pl-1">合計</td>
+              <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalOutgoing)} 万円/月</td>
             </tr>
-            <tr className="border-t-2 border-gray-300">
-              <td className="py-1 font-semibold text-gray-800">月次収支</td>
-              <td className={`py-1 text-right font-semibold ${displayedNetCashflow >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                {displayedNetCashflow >= 0 ? '+' : ''}{fmtM(displayedNetCashflow)} 万円/月
+
+            {/* ── 貯めるお金 ── */}
+            {totalSavings > 0 && (
+              <>
+                <tr className="bg-blue-50">
+                  <td className="py-1 font-semibold text-blue-800 pt-2" colSpan={2}>貯めるお金（投資・共済）</td>
+                </tr>
+                {totalMutual > 0 && (
+                  <>
+                    {row.bankruptcyMutual > 0 && (
+                      <tr className="border-b border-gray-100">
+                        <td className="py-1 pl-3 text-gray-500">倒産防止共済</td>
+                        <td className="py-1 text-right text-purple-600">-{fmtM(row.bankruptcyMutual)} 万円/月</td>
+                      </tr>
+                    )}
+                    {row.smallBusinessMutual > 0 && (
+                      <tr className="border-b border-gray-100">
+                        <td className="py-1 pl-3 text-gray-500">小規模企業共済</td>
+                        <td className="py-1 text-right text-purple-600">-{fmtM(row.smallBusinessMutual)} 万円/月</td>
+                      </tr>
+                    )}
+                  </>
+                )}
+                {row.investmentContribution > 0 && (
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1 pl-3 text-gray-500">投資積立（NISA・課税口座）</td>
+                    <td className="py-1 text-right text-blue-600">-{fmtM(row.investmentContribution)} 万円/月</td>
+                  </tr>
+                )}
+                <tr className="border-b-2 border-blue-300">
+                  <td className="py-1 font-semibold text-blue-800 pl-1">合計</td>
+                  <td className="py-1 text-right font-semibold text-blue-800">-{fmtM(totalSavings)} 万円/月</td>
+                </tr>
+              </>
+            )}
+
+            {/* ── 最終合計 ── */}
+            <tr className="border-t-2 border-gray-400 bg-gray-100">
+              <td className="py-1.5 font-bold text-gray-900">月次収支（手残り）</td>
+              <td className={`py-1.5 text-right font-bold ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                {netTotal >= 0 ? '+' : ''}{fmtM(netTotal)} 万円/月
               </td>
             </tr>
           </tbody>
@@ -268,8 +289,8 @@ export function AnnualTable() {
               <th className="px-3 py-2 text-right whitespace-nowrap">生活費</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">共済掛金</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">特別CF</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">年間現金収支</th>
-              <th className="px-3 py-2 text-right whitespace-nowrap">積立</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">収支（積立前）</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">投資積立</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">取り崩し</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">配当</th>
               <th className="px-3 py-2 text-right whitespace-nowrap">現金残高</th>
