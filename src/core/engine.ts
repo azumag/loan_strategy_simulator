@@ -146,7 +146,7 @@ export function simulate(scenario: Scenario): SimulationResult {
           bankruptcyMutualAnnual: effectiveBankruptcy,
           smallBusinessMutualAnnual: effectiveSmallBiz,
         }
-        grossIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual + stage.sideIncomeAnnual
+        grossIncome = stage.grossRevenueAnnual + stage.sideIncomeAnnual
         businessExpenses = stage.businessExpenseAnnual
         const taxResult = calcSoleProprietorTax(resolvedStage, effectiveTax)
         deductions = taxResult.deductions
@@ -178,7 +178,7 @@ export function simulate(scenario: Scenario): SimulationResult {
           smallBusinessMutualAnnual: effectiveSmallBiz,
         }
         const taxResult = calcMicroCorporationTax(resolvedStage, effectiveTax)
-        grossIncome = taxResult.grossIncome
+        grossIncome = taxResult.grossIncome + taxResult.businessExpenses
         businessExpenses = taxResult.businessExpenses
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
@@ -280,6 +280,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     const totalTaxBurden = incomeTax + residentTax + socialInsurance + pensionContribution
     const netCashflow =
       grossIncome -
+      businessExpenses -
       totalTaxBurden +
       spouseNetIncome -
       loanRepaymentAnnual -

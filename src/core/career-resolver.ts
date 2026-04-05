@@ -7,7 +7,7 @@ export function resolveCareerStage(age: number, stages: CareerStage[]): CareerSt
 export function calcGrossIncome(stage: CareerStage): number {
   switch (stage.workStyle) {
     case 'self_employed':
-      return stage.grossRevenueAnnual - stage.businessExpenseAnnual + stage.sideIncomeAnnual
+      return stage.grossRevenueAnnual + stage.sideIncomeAnnual
 
     case 'employee':
       if (stage.salaryInputMode === 'takehome') {
@@ -24,9 +24,9 @@ export function calcGrossIncome(stage: CareerStage): number {
 
     case 'micro_corporation':
       return (
-        stage.soloGrossRevenueAnnual - stage.soloBusinessExpenseAnnual +
+        stage.soloGrossRevenueAnnual +
         stage.directorCompensationAnnual +
-        stage.corporateRevenueAnnual - stage.corporateExpenseAnnual
+        stage.corporateRevenueAnnual
       )
   }
 }

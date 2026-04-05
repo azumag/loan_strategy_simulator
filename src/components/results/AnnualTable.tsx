@@ -38,7 +38,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   const netWorth = row.endingAssets - row.loanBalance
 
   const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome
-  const totalExpense = totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + row.investmentContribution
+  const totalExpense = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + row.investmentContribution
 
   const incomeItems = [
     { label: '収入（本人）', value: fmtM(row.grossIncome), color: 'text-green-700' },
@@ -54,6 +54,9 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   ]
 
   const expenseItems = [
+    ...(row.businessExpenses > 0 ? [
+      { label: '経費', value: `-${fmtM(row.businessExpenses)}`, color: 'text-gray-600' },
+    ] : []),
     { label: '所得税', value: `-${fmtM(row.incomeTax)}`, color: 'text-orange-500' },
     { label: '住民税', value: `-${fmtM(row.residentTax)}`, color: 'text-orange-500' },
     ...(row.socialInsuranceBreakdown ? [
