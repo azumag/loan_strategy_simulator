@@ -34,7 +34,7 @@ function AssetBar({ label, value, total, color }: { label: string; value: number
 }
 
 function DetailPanel({ row }: { row: AnnualRow }) {
-  const totalTax = row.incomeTax + row.residentTax + row.socialInsurance + row.pensionContribution
+  const totalTax = row.incomeTax + row.residentTax + row.businessTax + row.socialInsurance + row.pensionContribution
   const totalMutual = row.smallBusinessMutual + row.bankruptcyMutual
   const netWorth = row.endingAssets - row.loanBalance
 
@@ -99,6 +99,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 pl-4 text-gray-400">住民税</td>
               <td className="py-1 text-right text-orange-500">-{fmtM(row.residentTax)} 万円/月</td>
             </tr>
+            {row.businessTax > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-4 text-gray-400">個人事業税</td>
+                <td className="py-1 text-right text-orange-500">-{fmtM(row.businessTax)} 万円/月</td>
+              </tr>
+            )}
             {row.socialInsuranceBreakdown ? (
               <>
                 <tr className="border-b border-gray-100">
@@ -274,7 +280,7 @@ export function AnnualTable() {
           </thead>
           <tbody>
             {rows.map((row) => {
-              const totalTax = row.incomeTax + row.residentTax + row.socialInsurance + row.pensionContribution
+              const totalTax = row.incomeTax + row.residentTax + row.businessTax + row.socialInsurance + row.pensionContribution
               const isHighlight = row.age === 60 || row.age === 65 || row.age === summary.payoffAge
               const isExpanded = expandedAge === row.age
 

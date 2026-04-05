@@ -22,6 +22,7 @@ export interface AnnualRow {
   deductions: number
   incomeTax: number
   residentTax: number
+  businessTax: number
   socialInsurance: number
   pensionContribution: number
   socialInsuranceBreakdown?: {

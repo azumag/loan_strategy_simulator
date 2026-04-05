@@ -6,6 +6,7 @@ export interface TaxResult {
   deductions: number
   incomeTax: number
   residentTax: number
+  businessTax: number        // 個人事業税（住民税とは別途）
   socialInsurance: number
   pensionContribution: number
   smallBusinessMutual: number
@@ -150,8 +151,9 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
   const businessExpenses = stage.businessExpenseAnnual
 
   const netBusinessIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual
+  // 国保の算定基礎は事業所得＋副収入（雑所得）
   const { healthInsurance: nationalHealthInsurance, pension: nationalPension, total: socialInsurance } =
-    calcSelfEmployedSocialInsurance(netBusinessIncome)
+    calcSelfEmployedSocialInsurance(netBusinessIncome + stage.sideIncomeAnnual)
 
   // 課税所得計算
   const totalDeductions =
@@ -171,19 +173,20 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
   const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000) // 均等割概算含む
 
-  // 個人事業税: 事業所得290万超の部分×5%概算
+  // 個人事業税: 事業所得290万超の部分×5%概算（住民税とは別税）
   const businessTaxBase = Math.max(0, stage.grossRevenueAnnual - stage.businessExpenseAnnual - 2_900_000)
   const businessTax = businessTaxBase * 0.05
 
   const totalTaxBurden =
-    incomeTax + residentTax + socialInsurance + businessTax
+    incomeTax + residentTax + businessTax + socialInsurance
 
   return {
     grossIncome,
     businessExpenses,
     deductions: totalDeductions,
     incomeTax,
-    residentTax: residentTax + businessTax,
+    residentTax,
+    businessTax,
     socialInsurance: nationalHealthInsurance,
     pensionContribution: nationalPension,
     smallBusinessMutual: stage.smallBusinessMutualAnnual,
@@ -219,6 +222,7 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
       deductions: 0,
       incomeTax: 0,
       residentTax: 0,
+      businessTax: 0,
       socialInsurance: 0,
       pensionContribution: 0,
       smallBusinessMutual: 0,
@@ -227,12 +231,13 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     }
   }
 
-  // 社会保険: 標準報酬月額テーブルに基づく計算
-  const siBreakdown = calcEmployeeSocialInsurance(grossSalary)
+  // 社会保険: 給与・ボーナスのみ基準（副収入は社保対象外）
+  const salaryBase = (stage.grossSalaryAnnual ?? 0) + stage.bonusAnnual
+  const siBreakdown = calcEmployeeSocialInsurance(salaryBase)
   const socialInsurance = siBreakdown.total
 
-  // 給与所得控除
-  const employmentDeduction = calcEmploymentIncomeDeduction(grossSalary)
+  // 給与所得控除: 給与・ボーナスのみに適用（副収入＝雑所得は控除なし）
+  const employmentDeduction = calcEmploymentIncomeDeduction(salaryBase)
 
   const totalDeductions =
     employmentDeduction +
@@ -245,6 +250,7 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     tax.medicalDeductionAnnual +
     tax.otherDeductionAnnual
 
+  // 課税所得 = 給与所得 + 副収入（雑所得）- 所得控除
   const taxableIncome = Math.max(0, grossSalary - totalDeductions)
   const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000)
@@ -257,6 +263,7 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
     deductions: totalDeductions,
     incomeTax,
     residentTax,
+    businessTax: 0,
     socialInsurance,
     pensionContribution: 0,
     smallBusinessMutual: 0,
@@ -311,6 +318,7 @@ export function calcRetiredTax(stage: RetiredStage, tax: TaxConfig): TaxResult {
     deductions: totalDeductions,
     incomeTax,
     residentTax,
+    businessTax: 0,
     socialInsurance: healthInsurance,
     pensionContribution: 0,
     smallBusinessMutual: 0,
@@ -395,7 +403,8 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
     businessExpenses: stage.soloBusinessExpenseAnnual + stage.corporateExpenseAnnual,
     deductions: totalDeductions,
     incomeTax,
-    residentTax: residentTax + businessTax,
+    residentTax,
+    businessTax,
     socialInsurance: siBreakdown.healthInsurance,
     pensionContribution: siBreakdown.pension,
     smallBusinessMutual: stage.smallBusinessMutualAnnual,

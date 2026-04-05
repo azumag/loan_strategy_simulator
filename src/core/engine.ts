@@ -96,6 +96,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     let deductions = 0
     let incomeTax = 0
     let residentTax = 0
+    let businessTax = 0
     let socialInsurance = 0
     let pensionContribution = 0
     let smallBusinessMutual = 0
@@ -152,6 +153,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
+        businessTax = taxResult.businessTax
         socialInsurance = taxResult.socialInsurance
         pensionContribution = taxResult.pensionContribution
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
@@ -183,6 +185,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
+        businessTax = taxResult.businessTax
         socialInsurance = taxResult.socialInsurance
         pensionContribution = taxResult.pensionContribution
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
@@ -277,7 +280,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     }
 
     // 8. 年間収支
-    const totalTaxBurden = incomeTax + residentTax + socialInsurance + pensionContribution
+    const totalTaxBurden = incomeTax + residentTax + businessTax + socialInsurance + pensionContribution
     const netCashflow =
       grossIncome -
       businessExpenses -
@@ -376,6 +379,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       deductions,
       incomeTax,
       residentTax,
+      businessTax,
       socialInsurance,
       pensionContribution,
       socialInsuranceBreakdown,
