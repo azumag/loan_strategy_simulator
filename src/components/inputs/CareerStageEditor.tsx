@@ -154,11 +154,11 @@ function CareerStageList({
                 <SliderInput label="青色申告特別控除" value={stage.bluePenaltyDeduction / 10000}
                   onChange={(v) => onUpdate(i, { bluePenaltyDeduction: v * 10000 })}
                   min={0} max={65} step={10} unit="万円" />
-                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000 * 10000}
-                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v) * 12 })}
+                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000}
+                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={7} step={0.5} unit="万円/月" />
-                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000 * 10000}
-                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v) * 12 })}
+                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000}
+                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={20} step={1} unit="万円/月" />
               </div>
             </div>
@@ -198,11 +198,11 @@ function CareerStageList({
               <p className="text-xs text-gray-400">※役員報酬を低く設定すると社会保険料が削減されます（月5〜10万円が目安）。法人税後の利益は留保として試算に含まれます。</p>
               <p className="text-xs font-semibold text-gray-600 mt-1">── 共済（個人事業主として加入） ──</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000 * 10000}
-                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v) * 12 })}
+                <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000}
+                  onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={7} step={0.5} unit="万円/月" />
-                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000 * 10000}
-                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v) * 12 })}
+                <SliderInput label="倒産防止共済（月額）" value={stage.bankruptcyMutualAnnual / 12 / 10000}
+                  onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={20} step={1} unit="万円/月" />
               </div>
             </div>
