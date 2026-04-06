@@ -5,6 +5,9 @@ import { AnnualRow } from '../../types'
 const fmt = (n: number) => Math.round(n / 10000).toLocaleString()
 const fmtM = (n: number) => Math.round(n / 10000 / 12 * 10) / 10  // 月次（小数1桁）
 const fmtMan = (n: number) => (Math.round(n / 10000)).toLocaleString()  // 万円（年額）
+// 負の表示用: 0 のときは "-0" にならないよう "0" を返す
+const negM = (n: number) => { const v = Math.round(n / 10000 / 12 * 10) / 10; return v === 0 ? '0' : `-${v}` }
+const negMan = (n: number) => { const v = Math.round(n / 10000); return v === 0 ? '0' : `-${v.toLocaleString()}` }
 
 function rowClass(row: AnnualRow, payoffAge: number | null) {
   if (row.age === 60 || row.age === 65 || row.age === payoffAge) {
@@ -102,7 +105,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             {row.businessExpenses > 0 && (
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-3 text-gray-500">経費</td>
-                <td className="py-1 text-right text-gray-600">-{fmtM(row.businessExpenses)} 万円/月</td>
+                <td className="py-1 text-right text-gray-600">{negM(row.businessExpenses)} 万円/月</td>
               </tr>
             )}
             {row.homeOfficeExpenseTotal > 0 && (
@@ -139,11 +142,11 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             )}
             <tr className="border-b border-orange-100 bg-orange-50/50">
               <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
-              <td className="py-1 text-right font-medium text-orange-800">-{fmtM(totalTax)} 万円/月</td>
+              <td className="py-1 text-right font-medium text-orange-800">{negM(totalTax)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-6 text-gray-400">所得税</td>
-              <td className="py-1 text-right text-orange-500">-{fmtM(row.incomeTax)} 万円/月</td>
+              <td className="py-1 text-right text-orange-500">{negM(row.incomeTax)} 万円/月</td>
             </tr>
             {row.deductionBreakdown && (
               <>
@@ -153,65 +156,65 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 {row.deductionBreakdown.employment != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">給与所得控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.employment)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.employment)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.bluePenalty != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">青色申告特別控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.bluePenalty)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.bluePenalty)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.socialInsuranceDeduction > 0 && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">社会保険料控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.socialInsuranceDeduction)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.socialInsuranceDeduction)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.smallBizMutual != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">共済掛金控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.smallBizMutual)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.smallBizMutual)} 万円</td>
                   </tr>
                 )}
                 <tr className="border-b border-gray-50">
                   <td className="py-0.5 pl-9 text-xs text-gray-400">基礎控除</td>
-                  <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.basic)} 万円</td>
+                  <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.basic)} 万円</td>
                 </tr>
                 {row.deductionBreakdown.spouse != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">配偶者控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.spouse)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.spouse)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.dependent != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">扶養控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.dependent)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.dependent)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.lifeInsurance != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">生命保険料控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.lifeInsurance)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.lifeInsurance)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.earthquake != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">地震保険料控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.earthquake)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.earthquake)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.medical != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">医療費控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.medical)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.medical)} 万円</td>
                   </tr>
                 )}
                 {row.deductionBreakdown.other != null && (
                   <tr className="border-b border-gray-50">
                     <td className="py-0.5 pl-9 text-xs text-gray-400">その他控除</td>
-                    <td className="py-0.5 text-right text-xs text-amber-600">-{fmtMan(row.deductionBreakdown.other)} 万円</td>
+                    <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.deductionBreakdown.other)} 万円</td>
                   </tr>
                 )}
                 <tr className="border-b border-gray-100 bg-amber-50/50">
@@ -226,7 +229,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                     </tr>
                     <tr className="border-b border-gray-50 bg-green-50/50">
                       <td className="py-0.5 pl-9 text-xs text-green-700 font-medium">住宅ローン控除（税額控除）</td>
-                      <td className="py-0.5 text-right text-xs text-green-700 font-medium">-{fmtMan(row.deductionBreakdown.housingLoanCredit)} 万円</td>
+                      <td className="py-0.5 text-right text-xs text-green-700 font-medium">{negMan(row.deductionBreakdown.housingLoanCredit)} 万円</td>
                     </tr>
                   </>
                 )}
@@ -234,79 +237,79 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             )}
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-6 text-gray-400">住民税</td>
-              <td className="py-1 text-right text-orange-500">-{fmtM(row.residentTax)} 万円/月</td>
+              <td className="py-1 text-right text-orange-500">{negM(row.residentTax)} 万円/月</td>
             </tr>
             {row.businessTax > 0 && (
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-6 text-gray-400">個人事業税</td>
-                <td className="py-1 text-right text-orange-500">-{fmtM(row.businessTax)} 万円/月</td>
+                <td className="py-1 text-right text-orange-500">{negM(row.businessTax)} 万円/月</td>
               </tr>
             )}
             {row.socialInsuranceBreakdown ? (
               <>
                 <tr className="border-b border-gray-100">
                   <td className="py-1 pl-6 text-gray-400">健康保険</td>
-                  <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.healthInsurance)} 万円/月</td>
+                  <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.healthInsurance)} 万円/月</td>
                 </tr>
                 <tr className="border-b border-gray-100">
                   <td className="py-1 pl-6 text-gray-400">年金</td>
-                  <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
+                  <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
                 </tr>
                 {row.socialInsuranceBreakdown.employmentInsurance > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">雇用保険</td>
-                    <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
+                    <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
                   </tr>
                 )}
               </>
             ) : (
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-6 text-gray-400">社会保険</td>
-                <td className="py-1 text-right text-orange-400">-{fmtM(row.socialInsurance + row.pensionContribution)} 万円/月</td>
+                <td className="py-1 text-right text-orange-400">{negM(row.socialInsurance + row.pensionContribution)} 万円/月</td>
               </tr>
             )}
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-3 text-gray-500">ローン返済</td>
-              <td className="py-1 text-right text-red-600">-{fmtM(row.loanRepaymentAnnual)} 万円/月</td>
+              <td className="py-1 text-right text-red-600">{negM(row.loanRepaymentAnnual)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-3 text-gray-500">住宅費</td>
-              <td className="py-1 text-right text-red-500">-{fmtM(row.housingTaxAnnual)} 万円/月</td>
+              <td className="py-1 text-right text-red-500">{negM(row.housingTaxAnnual)} 万円/月</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-3 text-gray-500">生活費</td>
-              <td className="py-1 text-right text-red-500">-{fmtM(row.livingCostAnnual)} 万円/月</td>
+              <td className="py-1 text-right text-red-500">{negM(row.livingCostAnnual)} 万円/月</td>
             </tr>
             {row.livingCostBreakdown && (
               <>
                 {row.livingCostBreakdown.base > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">基本生活費</td>
-                    <td className="py-1 text-right text-red-400">-{fmtM(row.livingCostBreakdown.base)} 万円/月</td>
+                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.base)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.utility > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">光熱費</td>
-                    <td className="py-1 text-right text-red-400">-{fmtM(row.livingCostBreakdown.utility)} 万円/月</td>
+                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.utility)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.education > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">教育費</td>
-                    <td className="py-1 text-right text-red-400">-{fmtM(row.livingCostBreakdown.education)} 万円/月</td>
+                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.education)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.car > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">車維持費</td>
-                    <td className="py-1 text-right text-red-400">-{fmtM(row.livingCostBreakdown.car)} 万円/月</td>
+                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.car)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.other > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-6 text-gray-400">その他固定費</td>
-                    <td className="py-1 text-right text-red-400">-{fmtM(row.livingCostBreakdown.other)} 万円/月</td>
+                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.other)} 万円/月</td>
                   </tr>
                 )}
               </>
@@ -314,12 +317,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             {specialExpense > 0 && (
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-3 text-gray-500">特別支出</td>
-                <td className="py-1 text-right text-red-600">-{fmtM(specialExpense)} 万円/月</td>
+                <td className="py-1 text-right text-red-600">{negM(specialExpense)} 万円/月</td>
               </tr>
             )}
             <tr className="border-b-2 border-red-300">
               <td className="py-1 font-semibold text-red-800 pl-1">合計</td>
-              <td className="py-1 text-right font-semibold text-red-800">-{fmtM(totalOutgoing)} 万円/月</td>
+              <td className="py-1 text-right font-semibold text-red-800">{negM(totalOutgoing)} 万円/月</td>
             </tr>
 
             {/* ── 貯めるお金 ── */}
@@ -333,13 +336,13 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                     {row.bankruptcyMutual > 0 && (
                       <tr className="border-b border-gray-100">
                         <td className="py-1 pl-3 text-gray-500">倒産防止共済</td>
-                        <td className="py-1 text-right text-purple-600">-{fmtM(row.bankruptcyMutual)} 万円/月</td>
+                        <td className="py-1 text-right text-purple-600">{negM(row.bankruptcyMutual)} 万円/月</td>
                       </tr>
                     )}
                     {row.smallBusinessMutual > 0 && (
                       <tr className="border-b border-gray-100">
                         <td className="py-1 pl-3 text-gray-500">小規模企業共済</td>
-                        <td className="py-1 text-right text-purple-600">-{fmtM(row.smallBusinessMutual)} 万円/月</td>
+                        <td className="py-1 text-right text-purple-600">{negM(row.smallBusinessMutual)} 万円/月</td>
                       </tr>
                     )}
                   </>
@@ -347,12 +350,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 {row.investmentContribution > 0 && (
                   <tr className="border-b border-gray-100">
                     <td className="py-1 pl-3 text-gray-500">投資積立（NISA・課税口座）</td>
-                    <td className="py-1 text-right text-blue-600">-{fmtM(row.investmentContribution)} 万円/月</td>
+                    <td className="py-1 text-right text-blue-600">{negM(row.investmentContribution)} 万円/月</td>
                   </tr>
                 )}
                 <tr className="border-b-2 border-blue-300">
                   <td className="py-1 font-semibold text-blue-800 pl-1">合計</td>
-                  <td className="py-1 text-right font-semibold text-blue-800">-{fmtM(totalSavings)} 万円/月</td>
+                  <td className="py-1 text-right font-semibold text-blue-800">{negM(totalSavings)} 万円/月</td>
                 </tr>
               </>
             )}
