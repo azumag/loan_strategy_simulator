@@ -23,7 +23,7 @@ const BANKRUPTCY_MUTUAL_TOTAL_MAX  = 8_000_000   // 累計800万円
 const SMALL_BUSINESS_MUTUAL_ANNUAL_MAX = 840_000  // 月7万×12
 
 export function simulate(scenario: Scenario): SimulationResult {
-  const { scenario: sc, loan, careerStages, spouseCareerStages, tax, housing, living, assets, events, strategy, mutualAid } = scenario
+  const { scenario: sc, loan, careerStages, spouseCareerStages, tax, housing, living, assets, events, strategy, mutualAid, homeOfficeExpense } = scenario
 
   const rows: AnnualRow[] = []
   let cash = assets.initialCash
@@ -105,6 +105,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     let socialInsuranceBreakdown: AnnualRow['socialInsuranceBreakdown'] = undefined
     let retirementDrawdown = 0
     let dividendIncome = 0
+    let homeOfficeExpenseTotal = 0
     let workStyle: AnnualRow['workStyle'] = 'retired'
 
     if (stage) {
@@ -141,14 +142,25 @@ export function simulate(scenario: Scenario): SimulationResult {
         // 小規模企業共済の実効拠出額
         const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
-        // 実効額でステージを上書きして税計算
+        // 家事按分経費（光熱費 + ローン利息）
+        const inflationFactorForHO = Math.pow(1 + sc.inflationRate, age - sc.startAge)
+        const utilityDeduction = Math.round((living.monthlyUtilityCost ?? 0) * 12 * (homeOfficeExpense?.utilityRatio ?? 0) * inflationFactorForHO)
+        const loanInterestForHO = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
+          ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
+          : 0
+        const interestDeduction = Math.round(loanInterestForHO * (homeOfficeExpense?.loanInterestRatio ?? 0))
+        const homeOfficeDeductionTotal = utilityDeduction + interestDeduction
+
+        // 実効額でステージを上書きして税計算（家事按分分を経費に加算）
         const resolvedStage = {
           ...stage,
           bankruptcyMutualAnnual: effectiveBankruptcy,
           smallBusinessMutualAnnual: effectiveSmallBiz,
+          businessExpenseAnnual: stage.businessExpenseAnnual + homeOfficeDeductionTotal,
         }
+        homeOfficeExpenseTotal = homeOfficeDeductionTotal
         grossIncome = stage.grossRevenueAnnual + stage.sideIncomeAnnual
-        businessExpenses = stage.businessExpenseAnnual
+        businessExpenses = resolvedStage.businessExpenseAnnual
         const taxResult = calcSoleProprietorTax(resolvedStage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
@@ -174,11 +186,22 @@ export function simulate(scenario: Scenario): SimulationResult {
         )
         const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
+        // 家事按分経費（光熱費 + ローン利息）
+        const inflationFactorForHO_mc = Math.pow(1 + sc.inflationRate, age - sc.startAge)
+        const utilityDeduction_mc = Math.round((living.monthlyUtilityCost ?? 0) * 12 * (homeOfficeExpense?.utilityRatio ?? 0) * inflationFactorForHO_mc)
+        const loanInterestForHO_mc = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
+          ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
+          : 0
+        const interestDeduction_mc = Math.round(loanInterestForHO_mc * (homeOfficeExpense?.loanInterestRatio ?? 0))
+        const homeOfficeDeductionTotal = utilityDeduction_mc + interestDeduction_mc
+
         const resolvedStage = {
           ...stage,
           bankruptcyMutualAnnual: effectiveBankruptcy,
           smallBusinessMutualAnnual: effectiveSmallBiz,
+          soloBusinessExpenseAnnual: stage.soloBusinessExpenseAnnual + homeOfficeDeductionTotal,
         }
+        homeOfficeExpenseTotal = homeOfficeDeductionTotal
         const taxResult = calcMicroCorporationTax(resolvedStage, effectiveTax)
         grossIncome = taxResult.grossIncome + taxResult.businessExpenses
         businessExpenses = taxResult.businessExpenses
@@ -268,7 +291,8 @@ export function simulate(scenario: Scenario): SimulationResult {
     const inflationFactor = Math.pow(1 + sc.inflationRate, age - sc.startAge)
     const isRetired = workStyle === 'retired'
     const monthlyLiving = isRetired ? living.monthlyRetirementCost : living.monthlyBaseCost
-    const baseLivingCost = monthlyLiving * 12 + living.educationCostAnnual + living.carCostAnnual + living.otherFixedCostAnnual
+    const monthlyUtility = living.monthlyUtilityCost ?? 0
+    const baseLivingCost = (monthlyLiving + monthlyUtility) * 12 + living.educationCostAnnual + living.carCostAnnual + living.otherFixedCostAnnual
     const livingCostAnnual = baseLivingCost * inflationFactor
 
     // 7. 特別イベント
@@ -402,6 +426,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       endingLiquidAssets: liquidAssets,
       endingAssets,
       loanBalance: newLoanBalance,
+      homeOfficeExpenseTotal,
     })
 
     loanBalance = newLoanBalance

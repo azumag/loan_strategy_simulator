@@ -12,6 +12,8 @@ const BASE_TAX_CONFIG: TaxConfig = {
   medicalDeductionAnnual: 0,
   otherDeductionAnnual: 0,
   housingLoanDeductionAnnual: 0,
+  housingLoanDeductionMode: 'manual',
+  housingLoanScheme: 'eco',
   residentTaxLagEnabled: false,
 }
 
@@ -23,6 +25,7 @@ const SELF_EMPLOYED_STAGE: SelfEmployedStage = {
   businessExpenseAnnual: 2_000_000,
   bluePenaltyDeduction: 650_000,
   smallBusinessMutualAnnual: 840_000,
+  bankruptcyMutualAnnual: 0,
   sideIncomeAnnual: 0,
 }
 
@@ -82,9 +85,9 @@ describe('calcSoleProprietorTax', () => {
     expect(resultWith.incomeTax).toBeLessThanOrEqual(resultWithout.incomeTax)
   })
 
-  it('totalTaxBurden = incomeTax + residentTax + socialInsurance + pensionContribution', () => {
+  it('totalTaxBurden = incomeTax + residentTax + businessTax + socialInsurance + pensionContribution', () => {
     const result = calcSoleProprietorTax(SELF_EMPLOYED_STAGE, BASE_TAX_CONFIG)
-    const sum = result.incomeTax + result.residentTax + result.socialInsurance + result.pensionContribution
+    const sum = result.incomeTax + result.residentTax + result.businessTax + result.socialInsurance + result.pensionContribution
     expect(result.totalTaxBurden).toBeCloseTo(sum, 0)
   })
 })

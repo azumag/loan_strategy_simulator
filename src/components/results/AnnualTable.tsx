@@ -104,6 +104,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 <td className="py-1 text-right text-gray-600">-{fmtM(row.businessExpenses)} 万円/月</td>
               </tr>
             )}
+            {row.homeOfficeExpenseTotal > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-6 text-gray-400">うち家事按分</td>
+                <td className="py-1 text-right text-teal-600">{fmtM(row.homeOfficeExpenseTotal)} 万円/月</td>
+              </tr>
+            )}
             <tr className="border-b border-orange-100 bg-orange-50/50">
               <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
               <td className="py-1 text-right font-medium text-orange-800">-{fmtM(totalTax)} 万円/月</td>

@@ -14,7 +14,11 @@ function migrateScenario(loaded: unknown): Scenario {
     loan: { ...DEFAULT_SCENARIO.loan, ...(s.loan ?? {}) },
     tax: { ...DEFAULT_SCENARIO.tax, ...(s.tax ?? {}) },
     housing: { ...DEFAULT_SCENARIO.housing, ...(s.housing ?? {}) },
-    living: { ...DEFAULT_SCENARIO.living, ...(s.living ?? {}) },
+    living: {
+      ...DEFAULT_SCENARIO.living,
+      ...(s.living ?? {}),
+      monthlyUtilityCost: (s.living as any)?.monthlyUtilityCost ?? DEFAULT_SCENARIO.living.monthlyUtilityCost,
+    },
     assets: {
       ...DEFAULT_SCENARIO.assets,
       ...(s.assets ?? {}),
@@ -27,6 +31,7 @@ function migrateScenario(loaded: unknown): Scenario {
     },
     strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
     mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },
+    homeOfficeExpense: { ...DEFAULT_SCENARIO.homeOfficeExpense, ...(s.homeOfficeExpense ?? {}) },
     careerStages: (s.careerStages ?? DEFAULT_SCENARIO.careerStages).map(stage => {
       if (stage.workStyle === 'self_employed') {
         return { ...{ bankruptcyMutualAnnual: 0 }, ...stage }
@@ -54,6 +59,7 @@ type ScenarioAction =
   | { type: 'UPDATE_EVENTS'; payload: Scenario['events'] }
   | { type: 'UPDATE_STRATEGY'; payload: Partial<Scenario['strategy']> }
   | { type: 'UPDATE_MUTUAL_AID'; payload: Partial<Scenario['mutualAid']> }
+  | { type: 'UPDATE_HOME_OFFICE_EXPENSE'; payload: Partial<Scenario['homeOfficeExpense']> }
   | { type: 'RESET' }
   | { type: 'LOAD'; payload: Scenario }
 
@@ -81,6 +87,8 @@ function scenarioReducer(state: Scenario, action: ScenarioAction): Scenario {
       return { ...state, strategy: { ...state.strategy, ...action.payload } }
     case 'UPDATE_MUTUAL_AID':
       return { ...state, mutualAid: { ...state.mutualAid, ...action.payload } }
+    case 'UPDATE_HOME_OFFICE_EXPENSE':
+      return { ...state, homeOfficeExpense: { ...state.homeOfficeExpense, ...action.payload } }
     case 'RESET':
       return DEFAULT_SCENARIO
     case 'LOAD':

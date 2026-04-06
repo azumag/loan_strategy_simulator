@@ -26,6 +26,7 @@ export interface HousingConfig {
 
 export interface LivingConfig {
   monthlyBaseCost: number
+  monthlyUtilityCost: number   // 月間光熱費（電気ガス水道）
   educationCostAnnual: number
   carCostAnnual: number
   otherFixedCostAnnual: number

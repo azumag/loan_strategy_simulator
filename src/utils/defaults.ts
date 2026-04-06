@@ -61,6 +61,7 @@ export const DEFAULT_SCENARIO: Scenario = {
   },
   living: {
     monthlyBaseCost: 250_000,
+    monthlyUtilityCost: 20_000,
     educationCostAnnual: 0,
     carCostAnnual: 200_000,
     otherFixedCostAnnual: 0,
@@ -90,5 +91,9 @@ export const DEFAULT_SCENARIO: Scenario = {
   mutualAid: {
     smallBusinessMutualPayoutMethod: 'lump_sum',
     smallBusinessMutualAnnuityYears: 10,
+  },
+  homeOfficeExpense: {
+    utilityRatio: 0,
+    loanInterestRatio: 0,
   },
 }

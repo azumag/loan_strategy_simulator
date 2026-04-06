@@ -65,11 +65,11 @@ describe('resolveCareerStage', () => {
 })
 
 describe('calcGrossIncome', () => {
-  it('個人事業主: 売上 - 経費 + 副収入', () => {
+  it('個人事業主: 売上 + 副収入（経費は別途 businessExpenses として追跡）', () => {
     const stage = resolveCareerStage(40, STAGES)!
     const income = calcGrossIncome(stage)
-    // 10,000,000 - 2,000,000 + 500,000
-    expect(income).toBe(8_500_000)
+    // 10,000,000 + 500,000
+    expect(income).toBe(10_500_000)
   })
 
   it('会社員(gross): 額面年収 + 賞与 + 副収入', () => {

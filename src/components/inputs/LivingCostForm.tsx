@@ -19,6 +19,12 @@ export function LivingCostForm() {
           min={0} max={100} step={1} unit="万円/月"
         />
         <SliderInput
+          label="月間光熱費（電気ガス水道）"
+          value={(living.monthlyUtilityCost ?? 0) / 10000}
+          onChange={(v) => update('monthlyUtilityCost', v * 10000)}
+          min={0} max={20} step={0.5} unit="万円/月"
+        />
+        <SliderInput
           label="月間生活費（退職後）"
           value={living.monthlyRetirementCost / 10000}
           onChange={(v) => update('monthlyRetirementCost', v * 10000)}

@@ -5,6 +5,7 @@ export type StepId =
   | 'tax'
   | 'housing'
   | 'living'
+  | 'home_office'
   | 'assets'
   | 'events'
   | 'prepayment'
@@ -18,6 +19,7 @@ export const STEPS: { id: StepId; label: string; shortLabel: string }[] = [
   { id: 'tax', label: '税・控除', shortLabel: '税' },
   { id: 'housing', label: '住宅費', shortLabel: '住宅' },
   { id: 'living', label: '生活費', shortLabel: '生活' },
+  { id: 'home_office', label: '家事按分', shortLabel: '按分' },
   { id: 'assets', label: '資産', shortLabel: '資産' },
   { id: 'events', label: 'イベント', shortLabel: 'イベント' },
   { id: 'prepayment', label: '繰上返済', shortLabel: '繰上' },

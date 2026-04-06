@@ -14,6 +14,7 @@ const SAMPLE_SCENARIO: Scenario = {
   },
   loan: {
     principal: 30_000_000,
+    downPayment: 0,
     startAge: 40,
     loanTermYears: 35,
     repaymentType: 'equal_payment',
@@ -29,6 +30,7 @@ const SAMPLE_SCENARIO: Scenario = {
       businessExpenseAnnual: 2_000_000,
       bluePenaltyDeduction: 650_000,
       smallBusinessMutualAnnual: 840_000,
+      bankruptcyMutualAnnual: 0,
       sideIncomeAnnual: 0,
     },
     {
@@ -59,17 +61,21 @@ const SAMPLE_SCENARIO: Scenario = {
     medicalDeductionAnnual: 0,
     otherDeductionAnnual: 0,
     housingLoanDeductionAnnual: 0,
+    housingLoanDeductionMode: 'auto' as const,
+    housingLoanScheme: 'eco' as const,
     residentTaxLagEnabled: false,
   },
   housing: {
     fixedAssetTaxAnnual: 250_000,
     cityPlanningTaxAnnual: 80_000,
     homeInsuranceAnnual: 50_000,
+    homeInsuranceDeductible: false,
     maintenanceAnnual: 200_000,
     otherHousingCostAnnual: 0,
   },
   living: {
     monthlyBaseCost: 200_000,
+    monthlyUtilityCost: 0,
     educationCostAnnual: 0,
     carCostAnnual: 300_000,
     otherFixedCostAnnual: 0,
@@ -78,9 +84,11 @@ const SAMPLE_SCENARIO: Scenario = {
   assets: {
     initialCash: 5_000_000,
     initialLiquidAssets: 2_000_000,
+    initialNisaBalance: 0,
     initialSemiLiquidAssets: 0,
     initialRetirementAssets: 0,
     annualSavingsContribution: 0,
+    annualNisaContribution: 0,
     emergencyUsableRatio: 0.7,
   },
   events: [],
@@ -88,6 +96,14 @@ const SAMPLE_SCENARIO: Scenario = {
     prepayments: [],
     targetPayoffAge: 75,
     stopPrepaymentIfCashBelowBuffer: true,
+  },
+  mutualAid: {
+    smallBusinessMutualPayoutMethod: 'lump_sum',
+    smallBusinessMutualAnnuityYears: 10,
+  },
+  homeOfficeExpense: {
+    utilityRatio: 0,
+    loanInterestRatio: 0,
   },
 }
 

@@ -21,6 +21,13 @@ export interface ScenarioConfig {
   inflationRate: number
 }
 
+export interface HomeOfficeExpenseConfig {
+  /** 光熱費の按分率 (0〜1) */
+  utilityRatio: number
+  /** 住宅ローン利息の按分率 (0〜1) */
+  loanInterestRatio: number
+}
+
 export interface Scenario {
   scenario: ScenarioConfig
   loan: LoanConfig
@@ -33,4 +40,5 @@ export interface Scenario {
   events: LifeEvent[]
   strategy: PrepaymentStrategy
   mutualAid: MutualAidConfig
+  homeOfficeExpense: HomeOfficeExpenseConfig
 }

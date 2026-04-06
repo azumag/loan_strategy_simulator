@@ -8,6 +8,7 @@ import { CareerStageEditor } from './components/inputs/CareerStageEditor'
 import { TaxSettingForm } from './components/inputs/TaxSettingForm'
 import { HousingCostForm } from './components/inputs/HousingCostForm'
 import { LivingCostForm } from './components/inputs/LivingCostForm'
+import { HomeOfficeExpenseForm } from './components/inputs/HomeOfficeExpenseForm'
 import { AssetForm } from './components/inputs/AssetForm'
 import { EventEditor } from './components/inputs/EventEditor'
 import { PrepaymentStrategyEditor } from './components/inputs/PrepaymentStrategyEditor'
@@ -32,6 +33,7 @@ function AppContent() {
         {step === 'tax' && <TaxSettingForm />}
         {step === 'housing' && <HousingCostForm />}
         {step === 'living' && <LivingCostForm />}
+        {step === 'home_office' && <HomeOfficeExpenseForm />}
         {step === 'assets' && <AssetForm />}
         {step === 'events' && <EventEditor />}
         {step === 'prepayment' && <PrepaymentStrategyEditor />}
