@@ -41,6 +41,13 @@ export interface AnnualRow {
   mutualAidPayoutNet: number
   loanRepaymentAnnual: number
   housingTaxAnnual: number
+  housingCostBreakdown?: {
+    fixedAssetTax: number
+    cityPlanningTax: number
+    homeInsurance: number
+    maintenance: number
+    other: number
+  }
   livingCostAnnual: number
   livingCostBreakdown?: {
     base: number

@@ -95,6 +95,13 @@ export function simulate(scenario: Scenario): SimulationResult {
     housing.homeInsuranceAnnual +
     housing.maintenanceAnnual +
     housing.otherHousingCostAnnual
+  const housingCostBreakdown = {
+    fixedAssetTax: housing.fixedAssetTaxAnnual,
+    cityPlanningTax: housing.cityPlanningTaxAnnual,
+    homeInsurance: housing.homeInsuranceAnnual,
+    maintenance: housing.maintenanceAnnual,
+    other: housing.otherHousingCostAnnual,
+  }
 
   for (let age = sc.startAge; age <= sc.endAge; age++) {
     // 頭金: ローン開始年に現金から差し引く
@@ -483,6 +490,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       mutualAidPayoutNet,
       loanRepaymentAnnual,
       housingTaxAnnual,
+      housingCostBreakdown,
       livingCostAnnual,
       livingCostBreakdown,
       specialCashflow,

@@ -416,10 +416,46 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 pl-3 text-gray-500">ローン返済</td>
               <td className="py-1 text-right text-red-600">{negM(row.loanRepaymentAnnual)} 万円/月</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="py-1 pl-3 text-gray-500">住宅費</td>
+            <tr className="border-b border-gray-100 cursor-pointer select-none hover:bg-red-50/30" onClick={() => toggle('housing')}>
+              <td className="py-1 pl-3 text-gray-500">
+                住宅費 <span className="text-gray-300">{ind('housing')}</span>
+              </td>
               <td className="py-1 text-right text-red-500">{negM(row.housingTaxAnnual)} 万円/月</td>
             </tr>
+            {open.has('housing') && row.housingCostBreakdown && (
+              <>
+                {row.housingCostBreakdown.fixedAssetTax > 0 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">固定資産税</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.housingCostBreakdown.fixedAssetTax)} 万円/月</td>
+                  </tr>
+                )}
+                {row.housingCostBreakdown.cityPlanningTax > 0 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">都市計画税</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.housingCostBreakdown.cityPlanningTax)} 万円/月</td>
+                  </tr>
+                )}
+                {row.housingCostBreakdown.homeInsurance > 0 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">火災保険</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.housingCostBreakdown.homeInsurance)} 万円/月</td>
+                  </tr>
+                )}
+                {row.housingCostBreakdown.maintenance > 0 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">修繕費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.housingCostBreakdown.maintenance)} 万円/月</td>
+                  </tr>
+                )}
+                {row.housingCostBreakdown.other > 0 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">その他</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.housingCostBreakdown.other)} 万円/月</td>
+                  </tr>
+                )}
+              </>
+            )}
             <tr className={`border-b border-gray-100 ${row.livingCostBreakdown ? 'cursor-pointer select-none hover:bg-red-50/30' : ''}`} onClick={() => row.livingCostBreakdown && toggle('living')}>
               <td className="py-1 pl-3 text-gray-500">
                 生活費 {row.livingCostBreakdown ? <span className="text-gray-300">{ind('living')}</span> : null}
