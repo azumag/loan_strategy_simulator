@@ -39,6 +39,13 @@ export interface AnnualRow {
   loanRepaymentAnnual: number
   housingTaxAnnual: number
   livingCostAnnual: number
+  livingCostBreakdown?: {
+    base: number
+    utility: number
+    education: number
+    car: number
+    other: number
+  }
   specialCashflow: number
   spouseNetIncome: number          // 配偶者手取り収入
   netCashflow: number
@@ -52,6 +59,22 @@ export interface AnnualRow {
   loanBalance: number
   homeOfficeExpenseTotal: number  // 家事按分経費合計（光熱費按分+ローン利息按分）
   homeOfficeExpenseBreakdown?: { housing: number; interest: number; depreciation: number; utility: number }
+  deductionBreakdown?: {
+    taxableIncome: number
+    incomeTaxBeforeCredit: number
+    employment?: number
+    bluePenalty?: number
+    socialInsuranceDeduction: number
+    basic: number
+    spouse?: number
+    dependent?: number
+    lifeInsurance?: number
+    earthquake?: number
+    medical?: number
+    smallBizMutual?: number
+    housingLoanCredit?: number
+    other?: number
+  }
 }
 
 export interface SimulationResult {

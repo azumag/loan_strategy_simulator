@@ -18,6 +18,23 @@ export interface TaxResult {
     pension: number           // 厚生年金 or 国民年金
     employmentInsurance: number // 雇用保険（自営業は0）
   }
+  // 控除内訳（任意）
+  deductionBreakdown?: {
+    taxableIncome: number         // 課税所得
+    incomeTaxBeforeCredit: number // ローン控除前の所得税
+    employment?: number           // 給与所得控除
+    bluePenalty?: number          // 青色申告特別控除
+    socialInsuranceDeduction: number // 社会保険料控除
+    basic: number                 // 基礎控除
+    spouse?: number               // 配偶者控除
+    dependent?: number            // 扶養控除
+    lifeInsurance?: number        // 生命保険料控除
+    earthquake?: number           // 地震保険料控除
+    medical?: number              // 医療費控除
+    smallBizMutual?: number       // 小規模企業共済等掛金控除
+    housingLoanCredit?: number    // 住宅ローン控除（税額控除）
+    other?: number                // その他控除
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +187,9 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
     tax.otherDeductionAnnual
 
   const taxableIncome = Math.max(0, grossIncome - totalDeductions)
-  const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
+  const incomeTaxBeforeCredit = calcIncomeTax(taxableIncome)
+  const housingLoanCredit = Math.min(incomeTaxBeforeCredit, tax.housingLoanDeductionAnnual)
+  const incomeTax = Math.max(0, incomeTaxBeforeCredit - housingLoanCredit)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000) // 均等割概算含む
 
   // 個人事業税: 対象外職種の場合はゼロ、それ以外は事業所得290万超の部分×5%概算
@@ -198,6 +217,21 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
       healthInsurance: nationalHealthInsurance,
       pension: nationalPension,
       employmentInsurance: 0,
+    },
+    deductionBreakdown: {
+      taxableIncome,
+      incomeTaxBeforeCredit,
+      bluePenalty: stage.bluePenaltyDeduction || undefined,
+      socialInsuranceDeduction: socialInsurance,
+      basic: tax.basicDeductionAnnual,
+      spouse: tax.spouseDeductionAnnual || undefined,
+      dependent: tax.dependentDeductionAnnual || undefined,
+      lifeInsurance: tax.lifeInsuranceDeductionAnnual || undefined,
+      earthquake: tax.earthquakeInsuranceDeductionAnnual || undefined,
+      medical: tax.medicalDeductionAnnual || undefined,
+      smallBizMutual: (stage.smallBusinessMutualAnnual + Math.min(stage.bankruptcyMutualAnnual, 2_400_000)) || undefined,
+      housingLoanCredit: housingLoanCredit || undefined,
+      other: tax.otherDeductionAnnual || undefined,
     },
   }
 }
@@ -254,7 +288,9 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
 
   // 課税所得 = 給与所得 + 副収入（雑所得）- 所得控除
   const taxableIncome = Math.max(0, grossSalary - totalDeductions)
-  const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
+  const incomeTaxBeforeCredit = calcIncomeTax(taxableIncome)
+  const housingLoanCredit = Math.min(incomeTaxBeforeCredit, tax.housingLoanDeductionAnnual)
+  const incomeTax = Math.max(0, incomeTaxBeforeCredit - housingLoanCredit)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000)
 
   const totalTaxBurden = incomeTax + residentTax + socialInsurance
@@ -275,6 +311,20 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
       healthInsurance: siBreakdown.healthInsurance,
       pension: siBreakdown.pension,
       employmentInsurance: siBreakdown.employmentInsurance,
+    },
+    deductionBreakdown: {
+      taxableIncome,
+      incomeTaxBeforeCredit,
+      employment: employmentDeduction || undefined,
+      socialInsuranceDeduction: socialInsurance,
+      basic: tax.basicDeductionAnnual,
+      spouse: tax.spouseDeductionAnnual || undefined,
+      dependent: tax.dependentDeductionAnnual || undefined,
+      lifeInsurance: tax.lifeInsuranceDeductionAnnual || undefined,
+      earthquake: tax.earthquakeInsuranceDeductionAnnual || undefined,
+      medical: tax.medicalDeductionAnnual || undefined,
+      housingLoanCredit: housingLoanCredit || undefined,
+      other: tax.otherDeductionAnnual || undefined,
     },
   }
 }
@@ -306,7 +356,9 @@ export function calcRetiredTax(stage: RetiredStage, tax: TaxConfig): TaxResult {
     tax.otherDeductionAnnual
 
   const taxableIncome = Math.max(0, totalPension - totalDeductions)
-  const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
+  const incomeTaxBeforeCredit = calcIncomeTax(taxableIncome)
+  const housingLoanCredit = Math.min(incomeTaxBeforeCredit, tax.housingLoanDeductionAnnual)
+  const incomeTax = Math.max(0, incomeTaxBeforeCredit - housingLoanCredit)
   const residentTax = Math.max(0, taxableIncome * 0.1)
 
   // 後期高齢者医療保険: 年金収入の概算5%
@@ -326,6 +378,16 @@ export function calcRetiredTax(stage: RetiredStage, tax: TaxConfig): TaxResult {
     smallBusinessMutual: 0,
     bankruptcyMutual: 0,
     totalTaxBurden,
+    deductionBreakdown: {
+      taxableIncome,
+      incomeTaxBeforeCredit,
+      socialInsuranceDeduction: 0,
+      basic: tax.basicDeductionAnnual,
+      spouse: tax.spouseDeductionAnnual || undefined,
+      dependent: tax.dependentDeductionAnnual || undefined,
+      housingLoanCredit: housingLoanCredit || undefined,
+      other: tax.otherDeductionAnnual || undefined,
+    },
   }
 }
 
@@ -390,7 +452,9 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
 
   // 課税所得 = 個人事業所得 + 役員報酬(給与所得控除後) - 所得控除
   const taxableIncome = Math.max(0, soloNetIncome + directorNetIncome - totalDeductions)
-  const incomeTax = Math.max(0, calcIncomeTax(taxableIncome) - tax.housingLoanDeductionAnnual)
+  const incomeTaxBeforeCredit = calcIncomeTax(taxableIncome)
+  const housingLoanCredit = Math.min(incomeTaxBeforeCredit, tax.housingLoanDeductionAnnual)
+  const incomeTax = Math.max(0, incomeTaxBeforeCredit - housingLoanCredit)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000)
 
   // 個人事業税（対象外職種の場合はゼロ、それ以外は個人事業所得290万超の部分×5%）
@@ -418,6 +482,22 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
       healthInsurance: siBreakdown.healthInsurance,
       pension: siBreakdown.pension,
       employmentInsurance: siBreakdown.employmentInsurance,
+    },
+    deductionBreakdown: {
+      taxableIncome,
+      incomeTaxBeforeCredit,
+      employment: employmentDeduction || undefined,
+      bluePenalty: stage.bluePenaltyDeduction || undefined,
+      socialInsuranceDeduction: socialInsurance,
+      basic: tax.basicDeductionAnnual,
+      spouse: tax.spouseDeductionAnnual || undefined,
+      dependent: tax.dependentDeductionAnnual || undefined,
+      lifeInsurance: tax.lifeInsuranceDeductionAnnual || undefined,
+      earthquake: tax.earthquakeInsuranceDeductionAnnual || undefined,
+      medical: tax.medicalDeductionAnnual || undefined,
+      smallBizMutual: (stage.smallBusinessMutualAnnual + Math.min(stage.bankruptcyMutualAnnual, 2_400_000)) || undefined,
+      housingLoanCredit: housingLoanCredit || undefined,
+      other: tax.otherDeductionAnnual || undefined,
     },
     corporateTax,
     corporateRetainedEarnings,

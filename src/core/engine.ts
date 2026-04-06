@@ -149,6 +149,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     let bankruptcyMutual = 0
     let mutualAidPayoutNet = 0
     let socialInsuranceBreakdown: AnnualRow['socialInsuranceBreakdown'] = undefined
+    let deductionBreakdown: AnnualRow['deductionBreakdown'] = undefined
     let retirementDrawdown = 0
     let dividendIncome = 0
     let homeOfficeExpenseTotal = 0
@@ -221,6 +222,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         socialInsurance = taxResult.socialInsurance
         pensionContribution = taxResult.pensionContribution
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
+        deductionBreakdown = taxResult.deductionBreakdown
         smallBusinessMutual = effectiveSmallBiz
         bankruptcyMutual = effectiveBankruptcy
 
@@ -269,6 +271,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         socialInsurance = taxResult.socialInsurance
         pensionContribution = taxResult.pensionContribution
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
+        deductionBreakdown = taxResult.deductionBreakdown
         smallBusinessMutual = effectiveSmallBiz
         bankruptcyMutual = effectiveBankruptcy
 
@@ -287,6 +290,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         residentTax = taxResult.residentTax
         socialInsurance = taxResult.socialInsurance
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
+        deductionBreakdown = taxResult.deductionBreakdown
       } else if (stage.workStyle === 'retired') {
         // 小規模企業共済の分割受取分を年金収入に加算して課税
         const annuityThisYear = annuityBalance > 0 ? Math.min(annuityAnnual, annuityBalance) : 0
@@ -301,6 +305,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax
         socialInsurance = taxResult.socialInsurance
+        deductionBreakdown = taxResult.deductionBreakdown
         if (annuityThisYear > 0) {
           // netCashflow に加算されるよう specialCashflow を使わずここで直接 cash に足す
           // （grossIncome に含まれているので netCashflow 計算に自動包含）
@@ -351,6 +356,13 @@ export function simulate(scenario: Scenario): SimulationResult {
     const monthlyUtility = living.monthlyUtilityCost ?? 0
     const baseLivingCost = (monthlyLiving + monthlyUtility) * 12 + living.educationCostAnnual + living.carCostAnnual + living.otherFixedCostAnnual
     const livingCostAnnual = baseLivingCost * inflationFactor
+    const livingCostBreakdown = {
+      base: monthlyLiving * 12 * inflationFactor,
+      utility: monthlyUtility * 12 * inflationFactor,
+      education: living.educationCostAnnual * inflationFactor,
+      car: living.carCostAnnual * inflationFactor,
+      other: living.otherFixedCostAnnual * inflationFactor,
+    }
 
     // 7. 特別イベント
     let specialCashflow = 0
@@ -472,6 +484,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       loanRepaymentAnnual,
       housingTaxAnnual,
       livingCostAnnual,
+      livingCostBreakdown,
       specialCashflow,
       spouseNetIncome,
       netCashflow,
@@ -485,6 +498,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       loanBalance: newLoanBalance,
       homeOfficeExpenseTotal,
       homeOfficeExpenseBreakdown,
+      deductionBreakdown,
     })
 
     loanBalance = newLoanBalance
