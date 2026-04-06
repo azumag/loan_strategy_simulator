@@ -17,6 +17,9 @@ export interface TaxResult {
     healthInsurance: number   // 健康保険 or 国民健康保険
     pension: number           // 厚生年金 or 国民年金
     employmentInsurance: number // 雇用保険（自営業は0）
+    standardMonthlyRemuneration?: number  // employee/micro_corp: 標準報酬月額
+    annualSalaryBase?: number            // employee/micro_corp: 社保基準年収（雇用保険用）
+    netBusinessIncomeForNHI?: number     // self-employed: NHI算定の事業所得
   }
   // 控除内訳（任意）
   deductionBreakdown?: {
@@ -83,6 +86,7 @@ export function calcEmployeeSocialInsurance(annualSalary: number): {
   pension: number
   employmentInsurance: number
   total: number
+  standardMonthlyRemuneration: number
 } {
   // 月額報酬（ボーナス込みで年額→月額換算）
   const monthlySalary = annualSalary / 12
@@ -101,7 +105,7 @@ export function calcEmployeeSocialInsurance(annualSalary: number): {
   const employmentInsurance = Math.floor(annualSalary * 0.006)
 
   const total = healthInsurance + pension + employmentInsurance
-  return { healthInsurance, pension, employmentInsurance, total }
+  return { healthInsurance, pension, employmentInsurance, total, standardMonthlyRemuneration: stdMonthly }
 }
 
 /**
@@ -217,6 +221,7 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
       healthInsurance: nationalHealthInsurance,
       pension: nationalPension,
       employmentInsurance: 0,
+      netBusinessIncomeForNHI: netBusinessIncome + stage.sideIncomeAnnual,
     },
     deductionBreakdown: {
       taxableIncome,
@@ -311,6 +316,8 @@ export function calcEmployeeTax(stage: EmployeeStage, tax: TaxConfig): TaxResult
       healthInsurance: siBreakdown.healthInsurance,
       pension: siBreakdown.pension,
       employmentInsurance: siBreakdown.employmentInsurance,
+      standardMonthlyRemuneration: siBreakdown.standardMonthlyRemuneration,
+      annualSalaryBase: salaryBase,
     },
     deductionBreakdown: {
       taxableIncome,
@@ -482,6 +489,8 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
       healthInsurance: siBreakdown.healthInsurance,
       pension: siBreakdown.pension,
       employmentInsurance: siBreakdown.employmentInsurance,
+      standardMonthlyRemuneration: siBreakdown.standardMonthlyRemuneration,
+      annualSalaryBase: directorCompensation,
     },
     deductionBreakdown: {
       taxableIncome,

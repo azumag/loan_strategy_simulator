@@ -54,6 +54,17 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   // 最終合計
   const netTotal = totalIncome - totalOutgoing - totalSavings
 
+  // Collapsible sections state (all closed by default)
+  const [open, setOpen] = useState<Set<string>>(new Set())
+  const toggle = (key: string) => setOpen(prev => {
+    const next = new Set(prev)
+    next.has(key) ? next.delete(key) : next.add(key)
+    return next
+  })
+
+  // Helper: indicator character
+  const ind = (key: string) => open.has(key) ? '▾' : '▸'
+
   return (
     <div className="bg-gray-50 border-t border-blue-200 px-4 py-3 grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* 月次収支内訳 */}
@@ -144,11 +155,13 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
               <td className="py-1 text-right font-medium text-orange-800">{negM(totalTax)} 万円/月</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="py-1 pl-6 text-gray-400">所得税</td>
+            <tr className={`border-b border-gray-100 ${row.deductionBreakdown ? 'cursor-pointer select-none hover:bg-orange-50/30' : ''}`} onClick={() => row.deductionBreakdown && toggle('incomeTax')}>
+              <td className="py-1 pl-6 text-gray-400">
+                所得税 {row.deductionBreakdown ? <span className="text-gray-300">{ind('incomeTax')}</span> : null}
+              </td>
               <td className="py-1 text-right text-orange-500">{negM(row.incomeTax)} 万円/月</td>
             </tr>
-            {row.deductionBreakdown && (
+            {open.has('incomeTax') && row.deductionBreakdown && (
               <>
                 <tr className="border-b border-gray-50 bg-amber-50/30">
                   <td className="py-0.5 pl-9 text-xs text-gray-400" colSpan={2}>── 課税所得の計算 ──</td>
@@ -235,10 +248,28 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 )}
               </>
             )}
-            <tr className="border-b border-gray-100">
-              <td className="py-1 pl-6 text-gray-400">住民税</td>
+            <tr className={`border-b border-gray-100 ${row.deductionBreakdown ? 'cursor-pointer select-none hover:bg-orange-50/30' : ''}`} onClick={() => row.deductionBreakdown && toggle('residentTax')}>
+              <td className="py-1 pl-6 text-gray-400">
+                住民税 {row.deductionBreakdown ? <span className="text-gray-300">{ind('residentTax')}</span> : null}
+              </td>
               <td className="py-1 text-right text-orange-500">{negM(row.residentTax)} 万円/月</td>
             </tr>
+            {open.has('residentTax') && row.deductionBreakdown && (
+              <>
+                <tr className="border-b border-gray-50">
+                  <td className="py-0.5 pl-9 text-xs text-gray-400">課税所得（所得税と同じ）</td>
+                  <td className="py-0.5 text-right text-xs text-gray-500">{fmtMan(row.deductionBreakdown.taxableIncome)} 万円</td>
+                </tr>
+                <tr className="border-b border-gray-50">
+                  <td className="py-0.5 pl-9 text-xs text-gray-400">所得割 × 10%</td>
+                  <td className="py-0.5 text-right text-xs text-amber-600">{negMan(Math.round(row.deductionBreakdown.taxableIncome * 0.1))} 万円</td>
+                </tr>
+                <tr className="border-b border-gray-50">
+                  <td className="py-0.5 pl-9 text-xs text-gray-400">均等割（概算）</td>
+                  <td className="py-0.5 text-right text-xs text-amber-600">-0 万円</td>
+                </tr>
+              </>
+            )}
             {row.businessTax > 0 && (
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-6 text-gray-400">個人事業税</td>
@@ -247,19 +278,132 @@ function DetailPanel({ row }: { row: AnnualRow }) {
             )}
             {row.socialInsuranceBreakdown ? (
               <>
-                <tr className="border-b border-gray-100">
-                  <td className="py-1 pl-6 text-gray-400">健康保険</td>
+                {/* 健康保険 - collapsible */}
+                <tr className="border-b border-gray-100 cursor-pointer select-none hover:bg-orange-50/30" onClick={() => toggle('healthInsurance')}>
+                  <td className="py-1 pl-6 text-gray-400">
+                    健康保険 <span className="text-gray-300">{ind('healthInsurance')}</span>
+                  </td>
                   <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.healthInsurance)} 万円/月</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-1 pl-6 text-gray-400">年金</td>
+                {open.has('healthInsurance') && (() => {
+                  const si = row.socialInsuranceBreakdown!
+                  if (si.standardMonthlyRemuneration != null) {
+                    // 会社員・マイクロ法人: 標準報酬月額ベース
+                    const stdMonthly = si.standardMonthlyRemuneration
+                    const hiMonthly = Math.floor(stdMonthly * 0.04985)
+                    return (
+                      <>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">標準報酬月額</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">{fmtMan(stdMonthly)} 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">料率（協会けんぽ東京）</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">4.985%</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">月額 × 12ヶ月</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">{hiMonthly.toLocaleString()} 円 × 12</td>
+                        </tr>
+                      </>
+                    )
+                  } else if (si.netBusinessIncomeForNHI != null) {
+                    // 自営業: 国民健康保険
+                    const base = Math.max(0, si.netBusinessIncomeForNHI - 430_000)
+                    const incomeLevy = Math.floor(base * 0.085)
+                    const cap = 1_020_000
+                    return (
+                      <>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">所得割基礎額（所得 - 43万）</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">{fmtMan(base)} 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">所得割 × 8.5%</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">{negMan(incomeLevy)} 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">均等割（概算）</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">-5 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">上限 {fmtMan(cap)} 万円</td>
+                          <td className="py-0.5 text-right text-xs text-gray-400">合計（上限適用後）</td>
+                        </tr>
+                      </>
+                    )
+                  }
+                  return null
+                })()}
+
+                {/* 年金 - collapsible */}
+                <tr className="border-b border-gray-100 cursor-pointer select-none hover:bg-orange-50/30" onClick={() => toggle('pension')}>
+                  <td className="py-1 pl-6 text-gray-400">
+                    年金 <span className="text-gray-300">{ind('pension')}</span>
+                  </td>
                   <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
                 </tr>
+                {open.has('pension') && (() => {
+                  const si = row.socialInsuranceBreakdown!
+                  if (si.standardMonthlyRemuneration != null) {
+                    // 会社員・マイクロ法人: 厚生年金
+                    const stdMonthly = Math.min(si.standardMonthlyRemuneration, 650_000)
+                    const pensionMonthly = Math.floor(stdMonthly * 0.0915)
+                    return (
+                      <>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">標準報酬月額（上限65万）</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">{fmtMan(stdMonthly)} 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">料率（厚生年金）</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">9.15%</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">月額 × 12ヶ月</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">{pensionMonthly.toLocaleString()} 円 × 12</td>
+                        </tr>
+                      </>
+                    )
+                  } else {
+                    // 自営業: 国民年金
+                    return (
+                      <>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">国民年金 16,980円/月（2024年度）</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">-20 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">× 12ヶ月</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">16,980 × 12</td>
+                        </tr>
+                      </>
+                    )
+                  }
+                })()}
+
+                {/* 雇用保険 - collapsible */}
                 {row.socialInsuranceBreakdown.employmentInsurance > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">雇用保険</td>
-                    <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
-                  </tr>
+                  <>
+                    <tr className="border-b border-gray-100 cursor-pointer select-none hover:bg-orange-50/30" onClick={() => toggle('employmentInsurance')}>
+                      <td className="py-1 pl-6 text-gray-400">
+                        雇用保険 <span className="text-gray-300">{ind('employmentInsurance')}</span>
+                      </td>
+                      <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.employmentInsurance)} 万円/月</td>
+                    </tr>
+                    {open.has('employmentInsurance') && row.socialInsuranceBreakdown.annualSalaryBase != null && (
+                      <>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">社保基準年収</td>
+                          <td className="py-0.5 text-right text-xs text-gray-500">{fmtMan(row.socialInsuranceBreakdown.annualSalaryBase)} 万円</td>
+                        </tr>
+                        <tr className="border-b border-gray-50">
+                          <td className="py-0.5 pl-9 text-xs text-gray-400">料率 0.6%</td>
+                          <td className="py-0.5 text-right text-xs text-amber-600">{negMan(row.socialInsuranceBreakdown.employmentInsurance)} 万円</td>
+                        </tr>
+                      </>
+                    )}
+                  </>
                 )}
               </>
             ) : (
@@ -276,40 +420,42 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <td className="py-1 pl-3 text-gray-500">住宅費</td>
               <td className="py-1 text-right text-red-500">{negM(row.housingTaxAnnual)} 万円/月</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="py-1 pl-3 text-gray-500">生活費</td>
+            <tr className={`border-b border-gray-100 ${row.livingCostBreakdown ? 'cursor-pointer select-none hover:bg-red-50/30' : ''}`} onClick={() => row.livingCostBreakdown && toggle('living')}>
+              <td className="py-1 pl-3 text-gray-500">
+                生活費 {row.livingCostBreakdown ? <span className="text-gray-300">{ind('living')}</span> : null}
+              </td>
               <td className="py-1 text-right text-red-500">{negM(row.livingCostAnnual)} 万円/月</td>
             </tr>
-            {row.livingCostBreakdown && (
+            {open.has('living') && row.livingCostBreakdown && (
               <>
                 {row.livingCostBreakdown.base > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">基本生活費</td>
-                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.base)} 万円/月</td>
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">基本生活費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.livingCostBreakdown.base)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.utility > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">光熱費</td>
-                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.utility)} 万円/月</td>
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">光熱費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.livingCostBreakdown.utility)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.education > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">教育費</td>
-                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.education)} 万円/月</td>
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">教育費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.livingCostBreakdown.education)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.car > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">車維持費</td>
-                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.car)} 万円/月</td>
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">車維持費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.livingCostBreakdown.car)} 万円/月</td>
                   </tr>
                 )}
                 {row.livingCostBreakdown.other > 0 && (
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1 pl-6 text-gray-400">その他固定費</td>
-                    <td className="py-1 text-right text-red-400">{negM(row.livingCostBreakdown.other)} 万円/月</td>
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">その他固定費</td>
+                    <td className="py-0.5 text-right text-xs text-red-400">{negM(row.livingCostBreakdown.other)} 万円/月</td>
                   </tr>
                 )}
               </>

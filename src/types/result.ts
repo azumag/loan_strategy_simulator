@@ -29,6 +29,9 @@ export interface AnnualRow {
     healthInsurance: number
     pension: number
     employmentInsurance: number
+    standardMonthlyRemuneration?: number  // employee/micro_corp: 標準報酬月額
+    annualSalaryBase?: number            // employee/micro_corp: 社保基準年収（雇用保険用）
+    netBusinessIncomeForNHI?: number     // self-employed: NHI算定の事業所得
   }
   smallBusinessMutual: number
   bankruptcyMutual: number
