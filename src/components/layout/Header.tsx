@@ -126,7 +126,7 @@ export function Header() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <h1 className="text-lg font-bold text-gray-800 shrink-0">ローン返済戦略シミュレータ</h1>
+        <h1 className="text-lg font-bold text-gray-800 shrink-0">住宅ローンシミュレーター</h1>
         <div className="flex items-center gap-4 text-sm text-gray-600 min-w-0 overflow-hidden">
           <span className="hidden sm:inline shrink-0">月返済: <span className="font-semibold text-gray-900">¥{monthly}</span></span>
           <span className="shrink-0">完済: <span className="font-semibold text-gray-900">{payoff}</span></span>
