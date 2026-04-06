@@ -152,6 +152,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     let retirementDrawdown = 0
     let dividendIncome = 0
     let homeOfficeExpenseTotal = 0
+    let homeOfficeExpenseBreakdown: AnnualRow['homeOfficeExpenseBreakdown']
     let workStyle: AnnualRow['workStyle'] = 'retired'
 
     if (stage) {
@@ -193,7 +194,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         const loanInterestForHO = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
           ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
           : 0
-        const { total: homeOfficeDeductionTotal } = calcHomeOfficeDeduction({
+        const { total: homeOfficeDeductionTotal, breakdown: homeOfficeDeductionBreakdown } = calcHomeOfficeDeduction({
           hoe: homeOfficeExpense ?? { businessSpaceRatio: 0, utilityRatio: 0, buildingPrice: 0, buildingUsefulLife: 22 },
           housing,
           living,
@@ -209,6 +210,7 @@ export function simulate(scenario: Scenario): SimulationResult {
           businessExpenseAnnual: stage.businessExpenseAnnual + homeOfficeDeductionTotal,
         }
         homeOfficeExpenseTotal = homeOfficeDeductionTotal
+        homeOfficeExpenseBreakdown = homeOfficeDeductionBreakdown
         grossIncome = stage.grossRevenueAnnual + stage.sideIncomeAnnual
         businessExpenses = resolvedStage.businessExpenseAnnual
         const taxResult = calcSoleProprietorTax(resolvedStage, effectiveTax)
@@ -241,7 +243,7 @@ export function simulate(scenario: Scenario): SimulationResult {
         const loanInterestForHO_mc = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
           ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
           : 0
-        const { total: homeOfficeDeductionTotal } = calcHomeOfficeDeduction({
+        const { total: homeOfficeDeductionTotal, breakdown: homeOfficeDeductionBreakdown } = calcHomeOfficeDeduction({
           hoe: homeOfficeExpense ?? { businessSpaceRatio: 0, utilityRatio: 0, buildingPrice: 0, buildingUsefulLife: 22 },
           housing,
           living,
@@ -256,6 +258,7 @@ export function simulate(scenario: Scenario): SimulationResult {
           soloBusinessExpenseAnnual: stage.soloBusinessExpenseAnnual + homeOfficeDeductionTotal,
         }
         homeOfficeExpenseTotal = homeOfficeDeductionTotal
+        homeOfficeExpenseBreakdown = homeOfficeDeductionBreakdown
         const taxResult = calcMicroCorporationTax(resolvedStage, effectiveTax)
         grossIncome = taxResult.grossIncome + taxResult.businessExpenses
         businessExpenses = taxResult.businessExpenses
@@ -481,6 +484,7 @@ export function simulate(scenario: Scenario): SimulationResult {
       endingAssets,
       loanBalance: newLoanBalance,
       homeOfficeExpenseTotal,
+      homeOfficeExpenseBreakdown,
     })
 
     loanBalance = newLoanBalance

@@ -51,6 +51,7 @@ export interface AnnualRow {
   endingAssets: number
   loanBalance: number
   homeOfficeExpenseTotal: number  // 家事按分経費合計（光熱費按分+ローン利息按分）
+  homeOfficeExpenseBreakdown?: { housing: number; interest: number; depreciation: number; utility: number }
 }
 
 export interface SimulationResult {

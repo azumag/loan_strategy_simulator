@@ -105,10 +105,36 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               </tr>
             )}
             {row.homeOfficeExpenseTotal > 0 && (
-              <tr className="border-b border-gray-100">
-                <td className="py-1 pl-6 text-gray-400">うち家事按分</td>
-                <td className="py-1 text-right text-teal-600">{fmtM(row.homeOfficeExpenseTotal)} 万円/月</td>
-              </tr>
+              <>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 pl-6 text-gray-500">うち家事按分</td>
+                  <td className="py-1 text-right text-teal-600">{fmtM(row.homeOfficeExpenseTotal)} 万円/月</td>
+                </tr>
+                {row.homeOfficeExpenseBreakdown?.housing && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">住居費按分（固定資産税等）</td>
+                    <td className="py-0.5 text-right text-xs text-teal-500">{fmtM(row.homeOfficeExpenseBreakdown.housing)} 万円/月</td>
+                  </tr>
+                )}
+                {row.homeOfficeExpenseBreakdown?.interest && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">住宅ローン利息按分</td>
+                    <td className="py-0.5 text-right text-xs text-teal-500">{fmtM(row.homeOfficeExpenseBreakdown.interest)} 万円/月</td>
+                  </tr>
+                )}
+                {row.homeOfficeExpenseBreakdown?.depreciation && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">建物減価償却費按分</td>
+                    <td className="py-0.5 text-right text-xs text-teal-500">{fmtM(row.homeOfficeExpenseBreakdown.depreciation)} 万円/月</td>
+                  </tr>
+                )}
+                {row.homeOfficeExpenseBreakdown?.utility && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-0.5 pl-9 text-xs text-gray-400">光熱費按分</td>
+                    <td className="py-0.5 text-right text-xs text-teal-500">{fmtM(row.homeOfficeExpenseBreakdown.utility)} 万円/月</td>
+                  </tr>
+                )}
+              </>
             )}
             <tr className="border-b border-orange-100 bg-orange-50/50">
               <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
