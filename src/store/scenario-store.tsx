@@ -31,7 +31,16 @@ function migrateScenario(loaded: unknown): Scenario {
     },
     strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
     mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },
-    homeOfficeExpense: { ...DEFAULT_SCENARIO.homeOfficeExpense, ...(s.homeOfficeExpense ?? {}) },
+    homeOfficeExpense: {
+      ...DEFAULT_SCENARIO.homeOfficeExpense,
+      ...(s.homeOfficeExpense ?? {}),
+      // 旧フィールド loanInterestRatio は businessSpaceRatio に統合
+      businessSpaceRatio: (s.homeOfficeExpense as any)?.businessSpaceRatio
+        ?? (s.homeOfficeExpense as any)?.loanInterestRatio
+        ?? DEFAULT_SCENARIO.homeOfficeExpense.businessSpaceRatio,
+      buildingPrice: (s.homeOfficeExpense as any)?.buildingPrice ?? DEFAULT_SCENARIO.homeOfficeExpense.buildingPrice,
+      buildingUsefulLife: (s.homeOfficeExpense as any)?.buildingUsefulLife ?? DEFAULT_SCENARIO.homeOfficeExpense.buildingUsefulLife,
+    },
     careerStages: (s.careerStages ?? DEFAULT_SCENARIO.careerStages).map(stage => {
       if (stage.workStyle === 'self_employed') {
         return { ...{ bankruptcyMutualAnnual: 0 }, ...stage }

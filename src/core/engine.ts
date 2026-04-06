@@ -22,6 +22,47 @@ const BANKRUPTCY_MUTUAL_TOTAL_MAX  = 8_000_000   // 累計800万円
 // 小規模企業共済の年間掛金上限
 const SMALL_BUSINESS_MUTUAL_ANNUAL_MAX = 840_000  // 月7万×12
 
+/**
+ * 家事按分経費の合計を計算する
+ * - 住宅費系（固定資産税・都市計画税・火災保険・修繕費）× businessSpaceRatio
+ * - 住宅ローン利息 × businessSpaceRatio
+ * - 建物減価償却費（定額法）× businessSpaceRatio
+ * - 光熱費 × utilityRatio（インフレ調整あり）
+ */
+function calcHomeOfficeDeduction(params: {
+  hoe: Scenario['homeOfficeExpense']
+  housing: Scenario['housing']
+  living: Scenario['living']
+  loanInterestPaid: number
+  inflationFactor: number
+}): { total: number; breakdown: { housing: number; interest: number; depreciation: number; utility: number } } {
+  const { hoe, housing, living, loanInterestPaid, inflationFactor } = params
+  const spaceRatio = hoe.businessSpaceRatio ?? 0
+  const utilityRatio = hoe.utilityRatio ?? 0
+
+  // 住宅費系按分（インフレ調整なし — 固定資産税等は通常固定）
+  const housingDeduction = Math.round(
+    (housing.fixedAssetTaxAnnual + housing.cityPlanningTaxAnnual + housing.homeInsuranceAnnual + housing.maintenanceAnnual)
+    * spaceRatio
+  )
+
+  // 住宅ローン利息按分
+  const interestDeduction = Math.round(loanInterestPaid * spaceRatio)
+
+  // 建物の減価償却費（定額法）× 事業使用割合
+  // 償却率 = 1 / 耐用年数、残存価額10%を考慮
+  const usefulLife = Math.max(1, hoe.buildingUsefulLife ?? 22)
+  const annualDepreciation = hoe.buildingPrice > 0
+    ? Math.round(hoe.buildingPrice * 0.9 / usefulLife * spaceRatio)
+    : 0
+
+  // 光熱費按分（インフレ調整あり）
+  const utilityDeduction = Math.round((living.monthlyUtilityCost ?? 0) * 12 * utilityRatio * inflationFactor)
+
+  const total = housingDeduction + interestDeduction + annualDepreciation + utilityDeduction
+  return { total, breakdown: { housing: housingDeduction, interest: interestDeduction, depreciation: annualDepreciation, utility: utilityDeduction } }
+}
+
 export function simulate(scenario: Scenario): SimulationResult {
   const { scenario: sc, loan, careerStages, spouseCareerStages, tax, housing, living, assets, events, strategy, mutualAid, homeOfficeExpense } = scenario
 
@@ -83,10 +124,15 @@ export function simulate(scenario: Scenario): SimulationResult {
         effectiveHousingDeduction = 0
       }
     }
+    // 住宅ローン控除は居住用部分のみ対象: 事業使用割合を除いた割合で按分
+    // （事業使用部分の利息は経費化するため、控除対象から除外）
+    const spaceRatio = homeOfficeExpense?.businessSpaceRatio ?? 0
+    const residentialRatio = 1 - spaceRatio
+    const adjustedHousingDeduction = Math.floor(effectiveHousingDeduction * residentialRatio)
     const fireInsuranceDeduction = housing.homeInsuranceDeductible ? housing.homeInsuranceAnnual : 0
     const effectiveTax = {
       ...tax,
-      housingLoanDeductionAnnual: effectiveHousingDeduction,
+      housingLoanDeductionAnnual: adjustedHousingDeduction,
       otherDeductionAnnual: tax.otherDeductionAnnual + fireInsuranceDeduction,
     }
 
@@ -142,14 +188,18 @@ export function simulate(scenario: Scenario): SimulationResult {
         // 小規模企業共済の実効拠出額
         const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
-        // 家事按分経費（光熱費 + ローン利息）
+        // 家事按分経費
         const inflationFactorForHO = Math.pow(1 + sc.inflationRate, age - sc.startAge)
-        const utilityDeduction = Math.round((living.monthlyUtilityCost ?? 0) * 12 * (homeOfficeExpense?.utilityRatio ?? 0) * inflationFactorForHO)
         const loanInterestForHO = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
           ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
           : 0
-        const interestDeduction = Math.round(loanInterestForHO * (homeOfficeExpense?.loanInterestRatio ?? 0))
-        const homeOfficeDeductionTotal = utilityDeduction + interestDeduction
+        const { total: homeOfficeDeductionTotal } = calcHomeOfficeDeduction({
+          hoe: homeOfficeExpense ?? { businessSpaceRatio: 0, utilityRatio: 0, buildingPrice: 0, buildingUsefulLife: 22 },
+          housing,
+          living,
+          loanInterestPaid: loanInterestForHO,
+          inflationFactor: inflationFactorForHO,
+        })
 
         // 実効額でステージを上書きして税計算（家事按分分を経費に加算）
         const resolvedStage = {
@@ -186,14 +236,18 @@ export function simulate(scenario: Scenario): SimulationResult {
         )
         const effectiveSmallBiz = Math.min(stage.smallBusinessMutualAnnual ?? 0, SMALL_BUSINESS_MUTUAL_ANNUAL_MAX)
 
-        // 家事按分経費（光熱費 + ローン利息）
+        // 家事按分経費
         const inflationFactorForHO_mc = Math.pow(1 + sc.inflationRate, age - sc.startAge)
-        const utilityDeduction_mc = Math.round((living.monthlyUtilityCost ?? 0) * 12 * (homeOfficeExpense?.utilityRatio ?? 0) * inflationFactorForHO_mc)
         const loanInterestForHO_mc = loanBalance > 0 && loanYear >= 1 && loanYear <= loan.loanTermYears
           ? calcLoanYear(loan, loanYear, loanBalance).interestPaid
           : 0
-        const interestDeduction_mc = Math.round(loanInterestForHO_mc * (homeOfficeExpense?.loanInterestRatio ?? 0))
-        const homeOfficeDeductionTotal = utilityDeduction_mc + interestDeduction_mc
+        const { total: homeOfficeDeductionTotal } = calcHomeOfficeDeduction({
+          hoe: homeOfficeExpense ?? { businessSpaceRatio: 0, utilityRatio: 0, buildingPrice: 0, buildingUsefulLife: 22 },
+          housing,
+          living,
+          loanInterestPaid: loanInterestForHO_mc,
+          inflationFactor: inflationFactorForHO_mc,
+        })
 
         const resolvedStage = {
           ...stage,

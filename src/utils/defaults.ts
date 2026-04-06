@@ -93,7 +93,9 @@ export const DEFAULT_SCENARIO: Scenario = {
     smallBusinessMutualAnnuityYears: 10,
   },
   homeOfficeExpense: {
+    businessSpaceRatio: 0,
     utilityRatio: 0,
-    loanInterestRatio: 0,
+    buildingPrice: 0,
+    buildingUsefulLife: 22,
   },
 }
