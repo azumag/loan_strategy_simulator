@@ -341,7 +341,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                   <td className="py-1 pl-6 text-gray-400">
                     年金 <span className="text-gray-300">{ind('pension')}</span>
                   </td>
-                  <td className="py-1 text-right text-orange-400">{negM(row.socialInsuranceBreakdown.pension + row.pensionContribution)} 万円/月</td>
+                  <td className="py-1 text-right text-orange-400">{negM(row.pensionContribution)} 万円/月</td>
                 </tr>
                 {open.has('pension') && (() => {
                   const si = row.socialInsuranceBreakdown!
