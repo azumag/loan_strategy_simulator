@@ -25,6 +25,7 @@ export interface AnnualRow {
   businessTax: number
   socialInsurance: number
   pensionContribution: number
+  isTakehome?: boolean
   socialInsuranceBreakdown?: {
     healthInsurance: number
     pension: number

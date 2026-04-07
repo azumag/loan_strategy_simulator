@@ -151,6 +151,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 )}
               </>
             )}
+            {!row.isTakehome && (<>
             <tr className="border-b border-orange-100 bg-orange-50/50">
               <td className="py-1 pl-3 font-medium text-orange-800">税・社保</td>
               <td className="py-1 text-right font-medium text-orange-800">{negM(totalTax)} 万円/月</td>
@@ -412,6 +413,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
                 <td className="py-1 text-right text-orange-400">{negM(row.socialInsurance + row.pensionContribution)} 万円/月</td>
               </tr>
             )}
+            </>)}
             <tr className="border-b border-gray-100">
               <td className="py-1 pl-3 text-gray-500">ローン返済</td>
               <td className="py-1 text-right text-red-600">{negM(row.loanRepaymentAnnual)} 万円/月</td>

@@ -155,6 +155,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     let smallBusinessMutual = 0
     let bankruptcyMutual = 0
     let mutualAidPayoutNet = 0
+    let isTakehome = false
     let socialInsuranceBreakdown: AnnualRow['socialInsuranceBreakdown'] = undefined
     let deductionBreakdown: AnnualRow['deductionBreakdown'] = undefined
     let retirementDrawdown = 0
@@ -287,7 +288,8 @@ export function simulate(scenario: Scenario): SimulationResult {
         smallBusinessMutualAccumulated += effectiveSmallBiz
         if (effectiveSmallBiz > 0) smallBusinessMutualYears++
       } else if (stage.workStyle === 'employee') {
-        const sal = stage.salaryInputMode === 'takehome'
+        isTakehome = stage.salaryInputMode === 'takehome'
+        const sal = isTakehome
           ? (stage.takehomeSalaryAnnual ?? 0) + stage.bonusAnnual
           : (stage.grossSalaryAnnual ?? 0) + stage.bonusAnnual + stage.sideIncomeAnnual
         grossIncome = sal
@@ -474,6 +476,7 @@ export function simulate(scenario: Scenario): SimulationResult {
     rows.push({
       age,
       workStyle,
+      isTakehome: isTakehome || undefined,
       grossIncome,
       businessExpenses,
       deductions,
