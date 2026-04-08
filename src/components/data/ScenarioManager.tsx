@@ -9,6 +9,7 @@ import {
   reorderScenario,
   getCurrentScenarioId,
 } from '../../store/storage'
+import { DEFAULT_SCENARIO } from '../../utils/defaults'
 
 export function ScenarioManager() {
   const { scenario, dispatch } = useScenario()
@@ -72,6 +73,15 @@ export function ScenarioManager() {
     showMsg('削除しました')
   }
 
+  // デフォルト値で新規シナリオを作成してロード
+  const handleNewFromDefault = () => {
+    const newId = saveNewScenario(DEFAULT_SCENARIO)
+    dispatch({ type: 'RESET' })
+    setActiveId(newId)
+    refresh()
+    showMsg('新規シナリオを作成しました')
+  }
+
   const handleReset = () => {
     if (confirm('初期値にリセットしますか？（保存データは消えません）')) {
       dispatch({ type: 'RESET' })
@@ -86,6 +96,12 @@ export function ScenarioManager() {
       {/* 保存ボタン群 */}
       <div className="flex gap-3 flex-wrap items-center">
         <button
+          onClick={handleNewFromDefault}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700"
+        >
+          + 新規作成
+        </button>
+        <button
           onClick={handleOverwrite}
           className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
         >
@@ -95,7 +111,7 @@ export function ScenarioManager() {
           onClick={handleSaveNew}
           className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
         >
-          新規保存
+          別名保存
         </button>
         <button
           onClick={handleReset}

@@ -69,15 +69,23 @@ function CareerStageList({
   onRemove: (index: number) => void
   onChangeWorkStyle: (index: number, workStyle: WorkStyle) => void
 }) {
+  const retiredIndex = stages.findIndex(s => s.workStyle === 'retired')
+  const splitIndex = retiredIndex === -1 ? stages.length : retiredIndex
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        {title && <h2 className="text-lg font-semibold text-gray-800">{title}</h2>}
-        <button onClick={onAdd} className="text-sm text-blue-600 hover:underline ml-auto">+ 追加</button>
-      </div>
+      {title && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+        </div>
+      )}
 
       {stages.map((stage, i) => (
-        <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
+        <div key={i}>
+        {i === splitIndex && (
+          <button onClick={onAdd} className="text-sm text-blue-600 hover:underline w-full text-left mb-4">+ 追加</button>
+        )}
+        <div className="border border-gray-200 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -205,7 +213,7 @@ function CareerStageList({
                 />
               </div>
               <p className="text-xs text-gray-400">※役員報酬を低く設定すると社会保険料が削減されます（月5〜10万円が目安）。法人税後の利益は留保として試算に含まれます。</p>
-              <p className="text-xs font-semibold text-gray-600 mt-1">── 共済（個人事業主として加入） ──</p>
+              <p className="text-xs font-semibold text-gray-600 mt-1">── 共済 ──</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SliderInput label="小規模企業共済（月額）" value={stage.smallBusinessMutualAnnual / 12 / 10000}
                   onChange={(v) => onUpdate(i, { smallBusinessMutualAnnual: Math.round(v * 10000) * 12 })}
@@ -214,6 +222,17 @@ function CareerStageList({
                   onChange={(v) => onUpdate(i, { bankruptcyMutualAnnual: Math.round(v * 10000) * 12 })}
                   min={0} max={20} step={1} unit="万円/月" />
               </div>
+              {stage.bankruptcyMutualAnnual > 0 && (
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!stage.bankruptcyMutualPaidByCorporation}
+                    onChange={(e) => onUpdate(i, { bankruptcyMutualPaidByCorporation: e.target.checked })}
+                    className="rounded"
+                  />
+                  倒産防止共済を法人の損金として計上する（個人事業の経費ではなく法人税を削減）
+                </label>
+              )}
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
@@ -240,7 +259,11 @@ function CareerStageList({
             </div>
           )}
         </div>
+        </div>
       ))}
+      {splitIndex === stages.length && (
+        <button onClick={onAdd} className="text-sm text-blue-600 hover:underline">+ 追加</button>
+      )}
     </div>
   )
 }

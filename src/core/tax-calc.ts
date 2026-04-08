@@ -168,20 +168,21 @@ function calcEmploymentIncomeDeduction(grossSalary: number): number {
  * 個人事業主の税・社会保険概算計算
  */
 export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig): TaxResult {
-  const grossIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual + stage.sideIncomeAnnual
-  const businessExpenses = stage.businessExpenseAnnual
+  // 倒産防止共済は経費（必要経費）扱い: 事業所得から直接控除
+  const bankruptcyMutualExpense = Math.min(stage.bankruptcyMutualAnnual, 2_400_000)
+  const netBusinessIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual - bankruptcyMutualExpense
+  const grossIncome = netBusinessIncome + stage.sideIncomeAnnual
+  const businessExpenses = stage.businessExpenseAnnual + bankruptcyMutualExpense
 
-  const netBusinessIncome = stage.grossRevenueAnnual - stage.businessExpenseAnnual
-  // 国保の算定基礎は事業所得＋副収入（雑所得）
+  // 国保の算定基礎は事業所得（倒産防止控除後）＋副収入（雑所得）
   const { healthInsurance: nationalHealthInsurance, pension: nationalPension, total: socialInsurance } =
     calcSelfEmployedSocialInsurance(netBusinessIncome + stage.sideIncomeAnnual)
 
-  // 課税所得計算
+  // 課税所得計算（小規模企業共済のみ所得控除; 倒産防止は経費なので含めない）
   const totalDeductions =
     tax.basicDeductionAnnual +
     stage.bluePenaltyDeduction +
     stage.smallBusinessMutualAnnual +
-    Math.min(stage.bankruptcyMutualAnnual, 2_400_000) +
     socialInsurance +
     tax.spouseDeductionAnnual +
     tax.dependentDeductionAnnual +
@@ -196,10 +197,10 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
   const incomeTax = Math.max(0, incomeTaxBeforeCredit - housingLoanCredit)
   const residentTax = Math.max(0, taxableIncome * 0.1 + 5_000) // 均等割概算含む
 
-  // 個人事業税: 対象外職種の場合はゼロ、それ以外は事業所得290万超の部分×5%概算
+  // 個人事業税: 事業所得（倒産防止控除後）290万超の部分×5%
   const businessTaxBase = stage.exemptFromBusinessTax
     ? 0
-    : Math.max(0, stage.grossRevenueAnnual - stage.businessExpenseAnnual - 2_900_000)
+    : Math.max(0, netBusinessIncome - 2_900_000)
   const businessTax = businessTaxBase * 0.05
 
   const totalTaxBurden =
@@ -234,7 +235,7 @@ export function calcSoleProprietorTax(stage: SelfEmployedStage, tax: TaxConfig):
       lifeInsurance: tax.lifeInsuranceDeductionAnnual || undefined,
       earthquake: tax.earthquakeInsuranceDeductionAnnual || undefined,
       medical: tax.medicalDeductionAnnual || undefined,
-      smallBizMutual: (stage.smallBusinessMutualAnnual + Math.min(stage.bankruptcyMutualAnnual, 2_400_000)) || undefined,
+      smallBizMutual: stage.smallBusinessMutualAnnual || undefined,
       housingLoanCredit: housingLoanCredit || undefined,
       other: tax.otherDeductionAnnual || undefined,
     },
@@ -426,8 +427,13 @@ export function calcCorporateTax(corporateIncome: number): number {
  * - 法人税後の法人利益は留保（シミュレーション上は個人収入に加算して扱う）
  */
 export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxConfig): TaxResult & { corporateTax: number; corporateRetainedEarnings: number } {
+  // ── 倒産防止共済: 法人損金 or 個人事業経費 ──
+  const bankruptcyMutualExpense = Math.min(stage.bankruptcyMutualAnnual, 2_400_000)
+  const paidByCorp = stage.bankruptcyMutualPaidByCorporation ?? false
+
   // ── 個人事業所得 ──
   const soloNetIncome = stage.soloGrossRevenueAnnual - stage.soloBusinessExpenseAnnual
+    - (paidByCorp ? 0 : bankruptcyMutualExpense)
 
   // ── 役員報酬（給与所得控除を適用） ──
   const directorCompensation = stage.directorCompensationAnnual
@@ -440,15 +446,15 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
 
   // ── 法人側 ──
   const corporateProfit = stage.corporateRevenueAnnual - stage.corporateExpenseAnnual - directorCompensation
+    - (paidByCorp ? bankruptcyMutualExpense : 0)
   const corporateTax = calcCorporateTax(Math.max(0, corporateProfit))
   const corporateRetainedEarnings = Math.max(0, corporateProfit) - corporateTax
 
-  // ── 個人所得控除の合計 ──
+  // ── 個人所得控除の合計（小規模企業共済のみ所得控除; 倒産防止は経費なので含めない） ──
   const totalDeductions =
     tax.basicDeductionAnnual +
     stage.bluePenaltyDeduction +
     stage.smallBusinessMutualAnnual +
-    Math.min(stage.bankruptcyMutualAnnual, 2_400_000) +
     socialInsurance +
     tax.spouseDeductionAnnual +
     tax.dependentDeductionAnnual +
@@ -475,7 +481,7 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
 
   return {
     grossIncome,
-    businessExpenses: stage.soloBusinessExpenseAnnual + stage.corporateExpenseAnnual,
+    businessExpenses: stage.soloBusinessExpenseAnnual + stage.corporateExpenseAnnual + bankruptcyMutualExpense,
     deductions: totalDeductions,
     incomeTax,
     residentTax,
@@ -504,7 +510,7 @@ export function calcMicroCorporationTax(stage: MicroCorporationStage, tax: TaxCo
       lifeInsurance: tax.lifeInsuranceDeductionAnnual || undefined,
       earthquake: tax.earthquakeInsuranceDeductionAnnual || undefined,
       medical: tax.medicalDeductionAnnual || undefined,
-      smallBizMutual: (stage.smallBusinessMutualAnnual + Math.min(stage.bankruptcyMutualAnnual, 2_400_000)) || undefined,
+      smallBizMutual: stage.smallBusinessMutualAnnual || undefined,
       housingLoanCredit: housingLoanCredit || undefined,
       other: tax.otherDeductionAnnual || undefined,
     },

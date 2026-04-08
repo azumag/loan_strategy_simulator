@@ -50,9 +50,10 @@ export interface MicroCorporationStage extends BaseCareerStage {
   corporateRevenueAnnual: number    // 法人の年間売上
   corporateExpenseAnnual: number    // 法人の年間経費（役員報酬は除く）
   directorCompensationAnnual: number// 役員報酬（法人→個人への給与）※低く設定して社保削減
-  // ── 共済（個人事業主として加入） ──
-  smallBusinessMutualAnnual: number
-  bankruptcyMutualAnnual: number
+  // ── 共済 ──
+  smallBusinessMutualAnnual: number          // 小規模企業共済（個人の所得控除）
+  bankruptcyMutualAnnual: number             // 倒産防止共済
+  bankruptcyMutualPaidByCorporation?: boolean // true=法人の損金, false/undefined=個人事業の経費
   exemptFromBusinessTax?: boolean  // 個人事業税の対象外職種
 }
 

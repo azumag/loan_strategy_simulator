@@ -15,7 +15,6 @@ import { PrepaymentStrategyEditor } from './components/inputs/PrepaymentStrategy
 import { SummaryCard } from './components/results/SummaryCard'
 import { AnnualTable } from './components/results/AnnualTable'
 import { ChartView } from './components/results/ChartView'
-import { ScenarioManager } from './components/data/ScenarioManager'
 
 
 
@@ -44,7 +43,6 @@ function AppContent() {
             <AnnualTable />
           </div>
         )}
-        {step === 'data' && <ScenarioManager />}
       </main>
     </div>
   )
