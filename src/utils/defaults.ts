@@ -8,6 +8,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     minimumCashBuffer: 3_000_000,
     investmentReturnRate: 0.03,
     inflationRate: 0.01,
+    comparePrepayment: false,
   },
   loan: {
     principal: 30_000_000,

@@ -19,6 +19,7 @@ export interface ScenarioConfig {
   minimumCashBuffer: number
   investmentReturnRate: number
   inflationRate: number
+  comparePrepayment: boolean
 }
 
 export interface HomeOfficeExpenseConfig {

@@ -88,7 +88,24 @@ export interface AnnualRow {
   }
 }
 
+export interface BreakevenMetrics {
+  payoffAgeWithoutPrepayment: number | null
+  totalInterestWithoutPrepayment: number
+  payoffAgeWithPrepayment: number | null
+  totalInterestWithPrepayment: number
+  interestSavings: number
+  cumulativeInterestSavingsByAge: Array<{ age: number; savings: number }>
+  cashVsLoanBalanceByAge: Array<{
+    age: number
+    cashWithPrepayment: number
+    cashWithoutPrepayment: number
+    loanBalanceWithPrepayment: number
+    loanBalanceWithoutPrepayment: number
+  }>
+}
+
 export interface SimulationResult {
   summary: Summary
   rows: AnnualRow[]
+  breakeven?: BreakevenMetrics
 }

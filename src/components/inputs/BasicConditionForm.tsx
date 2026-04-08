@@ -5,7 +5,7 @@ export function BasicConditionForm() {
   const { scenario, dispatch } = useScenario()
   const sc = scenario.scenario
 
-  const update = (key: keyof typeof sc, value: string | number) =>
+  const update = (key: keyof typeof sc, value: string | number | boolean) =>
     dispatch({ type: 'UPDATE_SCENARIO', payload: { [key]: value } })
 
   return (
@@ -59,6 +59,19 @@ export function BasicConditionForm() {
           min={0} max={5} step={0.1} unit="%"
           note="生活費が年々増加するという想定を反映します。"
         />
+
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="comparePrepayment"
+            checked={sc.comparePrepayment}
+            onChange={(e) => update('comparePrepayment', e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="comparePrepayment" className="text-sm font-medium text-gray-700">
+            繰上げ返済の損益分岐点を表示
+          </label>
+        </div>
       </div>
     </div>
   )

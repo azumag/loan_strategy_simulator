@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useMemo, ReactNode } from 'react'
 import { Scenario, SimulationResult } from '../types'
-import { simulate } from '../core/engine'
+import { simulate, computeBreakevenComparison } from '../core/engine'
 import { DEFAULT_SCENARIO } from '../utils/defaults'
 import { loadFirstScenario } from './storage'
 
@@ -122,7 +122,17 @@ function getInitialScenario(): Scenario {
 
 export function ScenarioProvider({ children }: { children: ReactNode }) {
   const [scenario, dispatch] = useReducer(scenarioReducer, undefined, getInitialScenario)
-  const result = useMemo(() => simulate(scenario), [scenario])
+
+  const baseResult = useMemo(() => simulate(scenario, false), [scenario])
+
+  const result = useMemo(() => {
+    if (!scenario.scenario.comparePrepayment) {
+      return baseResult
+    }
+    const withoutPrepayment = simulate(scenario, true)
+    const breakeven = computeBreakevenComparison(baseResult, withoutPrepayment)
+    return { ...baseResult, breakeven }
+  }, [scenario, baseResult])
 
   return (
     <ScenarioContext.Provider value={{ scenario, result, dispatch }}>

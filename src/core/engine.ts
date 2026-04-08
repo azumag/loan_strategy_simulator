@@ -1,4 +1,4 @@
-import { Scenario, SimulationResult, AnnualRow, Summary, HousingLoanScheme } from '../types'
+import { Scenario, SimulationResult, AnnualRow, Summary, HousingLoanScheme, BreakevenMetrics } from '../types'
 import { calcLoanYear, calcEqualPaymentMonthly, resolveRate } from './loan-calc'
 import {
   calcSoleProprietorTax, calcEmployeeTax, calcRetiredTax,
@@ -6,7 +6,7 @@ import {
   calcSmallBusinessMutualLumpSumNet, calcBankruptcyMutualNet,
 } from './tax-calc'
 import { resolveCareerStage } from './career-resolver'
-import { applyPrepayments } from './prepayment'
+import { applyPrepayments, PrepaymentResult } from './prepayment'
 
 /** 2024年現行制度の住宅ローン控除パラメータ */
 export const HOUSING_LOAN_SCHEMES: Record<HousingLoanScheme, { name: string; limit: number; rate: number; years: number }> = {
@@ -63,7 +63,7 @@ function calcHomeOfficeDeduction(params: {
   return { total, breakdown: { housing: housingDeduction, interest: interestDeduction, depreciation: annualDepreciation, utility: utilityDeduction } }
 }
 
-export function simulate(scenario: Scenario): SimulationResult {
+export function simulate(scenario: Scenario, disablePrepayment: boolean = false): SimulationResult {
   const { scenario: sc, loan, careerStages, spouseCareerStages, tax, housing, living, assets, events, strategy, mutualAid, homeOfficeExpense } = scenario
 
   const rows: AnnualRow[] = []
@@ -455,21 +455,33 @@ export function simulate(scenario: Scenario): SimulationResult {
     }
 
     // 10. 繰上返済
-    const prepayResult = applyPrepayments({
-      age,
-      loanBalance,
-      cash,
-      liquidAssets,
-      minimumCashBuffer: sc.minimumCashBuffer,
-      strategy,
-    })
+    let prepayResult: PrepaymentResult
+    if (disablePrepayment) {
+      prepayResult = {
+        prepaymentAmount: 0,
+        newLoanBalance: loanBalance > 0 && loanYear >= 1
+          ? Math.max(0, (loanYear <= loan.loanTermYears ? calcLoanYear(loan, loanYear, loanBalance).endingBalance : 0))
+          : 0,
+        newCash: cash,
+        newLiquidAssets: liquidAssets,
+      }
+    } else {
+      prepayResult = applyPrepayments({
+        age,
+        loanBalance,
+        cash,
+        liquidAssets,
+        minimumCashBuffer: sc.minimumCashBuffer,
+        strategy,
+      })
+    }
     cash = prepayResult.newCash
     liquidAssets = prepayResult.newLiquidAssets
     const newLoanBalance = loanBalance > 0 && loanYear >= 1
       ? Math.max(0, (loanYear <= loan.loanTermYears ? calcLoanYear(loan, loanYear, loanBalance).endingBalance : 0) - prepayResult.prepaymentAmount)
       : 0
 
-    totalRepayment += loanRepaymentAnnual + prepayResult.prepaymentAmount
+    totalRepayment += loanRepaymentAnnual + (disablePrepayment ? 0 : prepayResult.prepaymentAmount)
 
     const endingAssets = cash + nisaBalance + liquidAssets
 
@@ -555,4 +567,57 @@ export function simulate(scenario: Scenario): SimulationResult {
   }
 
   return { summary, rows }
+}
+
+/**
+ * Compute break-even comparison between scenarios with and without prepayment.
+ * Pure function — no side effects, no mutations.
+ */
+export function computeBreakevenComparison(
+  baseResult: SimulationResult,           // 繰上げ返済あり
+  withoutPrepaymentResult: SimulationResult, // 繰上げ返済なし
+): BreakevenMetrics {
+  const rowsWith = baseResult.rows
+  const rowsWithout = withoutPrepaymentResult.rows
+
+  const withMap = new Map(rowsWith.map(r => [r.age, r]))
+
+  // Cumulative interest savings by age: 每年的贷款余额差额累加
+  const cumulativeInterestSavingsByAge: Array<{ age: number; savings: number }> = []
+  let runningSavings = 0
+  for (const rowWithout of rowsWithout) {
+    const rowWith = withMap.get(rowWithout.age)
+    if (rowWith) {
+      // 每次提前还款，贷款余额减少 = 节省的利息（近似）
+      runningSavings += rowWithout.loanBalance - rowWith.loanBalance
+    }
+    cumulativeInterestSavingsByAge.push({ age: rowWithout.age, savings: runningSavings })
+  }
+
+  // Cash vs loan balance by age
+  const cashVsLoanBalanceByAge = rowsWithout.map(rowWithout => {
+    const rowWith = withMap.get(rowWithout.age)
+    return {
+      age: rowWithout.age,
+      cashWithPrepayment: rowWith?.endingCash ?? rowWithout.endingCash,
+      cashWithoutPrepayment: rowWithout.endingCash,
+      loanBalanceWithPrepayment: rowWith?.loanBalance ?? rowWithout.loanBalance,
+      loanBalanceWithoutPrepayment: rowWithout.loanBalance,
+    }
+  })
+
+  const payoffAgeWithout = withoutPrepaymentResult.summary.payoffAge
+  const payoffAgeWith = baseResult.summary.payoffAge
+  const totalInterestWithout = withoutPrepaymentResult.summary.totalInterest
+  const totalInterestWith = baseResult.summary.totalInterest
+
+  return {
+    payoffAgeWithoutPrepayment: payoffAgeWithout,
+    totalInterestWithoutPrepayment: totalInterestWithout,
+    payoffAgeWithPrepayment: payoffAgeWith,
+    totalInterestWithPrepayment: totalInterestWith,
+    interestSavings: totalInterestWithout - totalInterestWith,
+    cumulativeInterestSavingsByAge,
+    cashVsLoanBalanceByAge,
+  }
 }

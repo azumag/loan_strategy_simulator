@@ -13,6 +13,7 @@ import { AssetForm } from './components/inputs/AssetForm'
 import { EventEditor } from './components/inputs/EventEditor'
 import { PrepaymentStrategyEditor } from './components/inputs/PrepaymentStrategyEditor'
 import { SummaryCard } from './components/results/SummaryCard'
+import { BreakevenCard } from './components/results/BreakevenCard'
 import { AnnualTable } from './components/results/AnnualTable'
 import { ChartView } from './components/results/ChartView'
 
@@ -39,6 +40,7 @@ function AppContent() {
         {step === 'result' && (
           <div className="space-y-6">
             <SummaryCard />
+            <BreakevenCard />
             <ChartView />
             <AnnualTable />
           </div>
