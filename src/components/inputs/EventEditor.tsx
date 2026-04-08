@@ -39,10 +39,12 @@ export function EventEditor() {
           <div>
             <label className="block text-xs text-gray-600 mb-1">年齢</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={event.age}
-              onChange={(e) => update(i, { age: Number(e.target.value) })}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              onChange={(e) => update(i, { age: Number(e.target.value.replace(/\D/g, '')) })}
+              className="w-full border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
           <div>
@@ -69,10 +71,12 @@ export function EventEditor() {
             <label className="block text-xs text-gray-600 mb-1">金額（万円）</label>
             <div className="flex gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={event.amount / 10000}
-                onChange={(e) => update(i, { amount: Number(e.target.value) * 10000 })}
-                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                onChange={(e) => update(i, { amount: Number(e.target.value.replace(/\D/g, '')) * 10000 })}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 min={0}
               />
               <button onClick={() => remove(i)} className="text-red-500 text-xs hover:underline">削除</button>

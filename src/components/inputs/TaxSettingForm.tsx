@@ -94,10 +94,12 @@ export function TaxSettingForm() {
           <div>
             <label className="block text-xs text-gray-600 mb-1">住宅ローン控除額（万円/年）</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={tax.housingLoanDeductionAnnual / 10000}
-              onChange={(e) => update('housingLoanDeductionAnnual', Number(e.target.value) * 10000)}
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white"
+              onChange={(e) => update('housingLoanDeductionAnnual', Number(e.target.value.replace(/\D/g, '')) * 10000)}
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               min={0}
             />
             <p className="text-xs text-gray-400 mt-1">毎年固定額で適用されます。</p>

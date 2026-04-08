@@ -90,17 +90,21 @@ function CareerStageList({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={stage.fromAge}
-                  onChange={(e) => onUpdate(i, { fromAge: Number(e.target.value) })}
-                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+                  onChange={(e) => onUpdate(i, { fromAge: Number(e.target.value.replace(/\D/g, '')) })}
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-sm text-gray-500">〜</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={stage.toAge}
-                  onChange={(e) => onUpdate(i, { toAge: Number(e.target.value) })}
-                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+                  onChange={(e) => onUpdate(i, { toAge: Number(e.target.value.replace(/\D/g, '')) })}
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-sm text-gray-500">歳</span>
               </div>
@@ -418,12 +422,14 @@ export function CareerStageEditor() {
                 <div className="mt-2 flex items-center gap-2">
                   <label className="text-xs text-gray-600">分割年数</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min={10}
                     max={20}
                     value={mutualAid.smallBusinessMutualAnnuityYears}
-                    onChange={(e) => updateMutualAid({ smallBusinessMutualAnnuityYears: Math.min(20, Math.max(10, Number(e.target.value))) })}
-                    className="w-16 border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                    onChange={(e) => updateMutualAid({ smallBusinessMutualAnnuityYears: Math.min(20, Math.max(10, Number(e.target.value.replace(/\D/g, '')))) })}
+                    className="w-16 border border-gray-300 rounded px-2 py-1 text-sm bg-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="text-xs text-gray-500">年（10〜20）。公的年金等の雑所得として課税。</span>
                 </div>

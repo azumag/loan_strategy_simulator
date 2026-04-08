@@ -40,10 +40,12 @@ export function PrepaymentStrategyEditor() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">目標完済年齢</label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={strategy.targetPayoffAge}
-            onChange={(e) => dispatch({ type: 'UPDATE_STRATEGY', payload: { targetPayoffAge: Number(e.target.value) } })}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => dispatch({ type: 'UPDATE_STRATEGY', payload: { targetPayoffAge: Number(e.target.value.replace(/\D/g, '')) } })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
         <div className="flex items-center gap-2 pt-6">
@@ -73,19 +75,23 @@ export function PrepaymentStrategyEditor() {
             <div>
               <label className="block text-xs text-gray-600 mb-1">年齢</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={p.age}
-                onChange={(e) => updateEntry(i, { age: Number(e.target.value) })}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                onChange={(e) => updateEntry(i, { age: Number(e.target.value.replace(/\D/g, '')) })}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">金額（万円）</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={p.amount / 10000}
-                onChange={(e) => updateEntry(i, { amount: Number(e.target.value) * 10000 })}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                onChange={(e) => updateEntry(i, { amount: Number(e.target.value.replace(/\D/g, '')) * 10000 })}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 min={0}
               />
             </div>

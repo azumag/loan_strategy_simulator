@@ -54,10 +54,12 @@ export function HousingCostForm() {
             <span className="text-sm font-medium text-gray-700">固定資産税</span>
             <div className="flex items-center gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={housing.fixedAssetTaxAnnual / 10000}
-                onChange={(e) => update('fixedAssetTaxAnnual', Number(e.target.value) * 10000)}
-                className="w-24 border border-gray-300 rounded px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onChange={(e) => update('fixedAssetTaxAnnual', Number(e.target.value.replace(/\D/g, '')) * 10000)}
+                className="w-24 border border-gray-300 rounded px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 min={0}
               />
               <span className="text-xs text-gray-500">万円/年</span>
@@ -80,10 +82,12 @@ export function HousingCostForm() {
             <span className="text-sm font-medium text-gray-700">都市計画税</span>
             <div className="flex items-center gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={housing.cityPlanningTaxAnnual / 10000}
-                onChange={(e) => update('cityPlanningTaxAnnual', Number(e.target.value) * 10000)}
-                className="w-24 border border-gray-300 rounded px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onChange={(e) => update('cityPlanningTaxAnnual', Number(e.target.value.replace(/\D/g, '')) * 10000)}
+                className="w-24 border border-gray-300 rounded px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 min={0}
               />
               <span className="text-xs text-gray-500">万円/年</span>
@@ -173,11 +177,13 @@ export function HousingCostForm() {
               <div className="flex items-center gap-3">
                 <label className="text-xs font-medium text-gray-700 whitespace-nowrap">都市計画税率</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*\.?[0-9]*"
                   value={cityPlanningTaxRate}
-                  onChange={(e) => setCityPlanningTaxRate(Math.min(0.3, Math.max(0, Number(e.target.value))))}
+                  onChange={(e) => setCityPlanningTaxRate(Math.min(0.3, Math.max(0, Number(e.target.value.replace(/[^\d.]/g, '')))))}
                   step={0.01} min={0} max={0.3}
-                  className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="w-20 border border-gray-300 rounded px-2 py-1 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-xs text-gray-500">%（上限0.3%。例：調布市0.24%）</span>
               </div>
