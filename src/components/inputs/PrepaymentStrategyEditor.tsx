@@ -4,6 +4,7 @@ import { PrepaymentEntry } from '../../types'
 export function PrepaymentStrategyEditor() {
   const { scenario, dispatch } = useScenario()
   const strategy = scenario.strategy
+  const sc = scenario.scenario
 
   const updateEntry = (index: number, patch: Partial<PrepaymentEntry>) => {
     dispatch({
@@ -57,6 +58,16 @@ export function PrepaymentStrategyEditor() {
             className="rounded"
           />
           <label htmlFor="stopOnBuffer" className="text-sm text-gray-700">現金バッファ以下なら繰上返済を中止</label>
+        </div>
+        <div className="flex items-center gap-2 pt-6 md:col-span-2">
+          <input
+            type="checkbox"
+            id="comparePrepayment"
+            checked={sc.comparePrepayment}
+            onChange={(e) => dispatch({ type: 'UPDATE_SCENARIO', payload: { comparePrepayment: e.target.checked } })}
+            className="rounded"
+          />
+          <label htmlFor="comparePrepayment" className="text-sm text-gray-700">繰上げ返済の損益分岐点を表示</label>
         </div>
       </div>
 
