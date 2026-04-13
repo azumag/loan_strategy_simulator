@@ -393,7 +393,8 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
       livingCostAnnual -
       smallBusinessMutual -
       bankruptcyMutual +
-      specialCashflow
+      specialCashflow +
+      mutualAidPayoutNet
 
     // 9. 現金・資産更新
     cash += netCashflow

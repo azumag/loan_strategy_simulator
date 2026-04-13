@@ -46,7 +46,7 @@ function DetailPanel({ row }: { row: AnnualRow }) {
   const specialExpense = row.specialCashflow < 0 ? -row.specialCashflow : 0
 
   // 入るお金
-  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome
+  const totalIncome = row.grossIncome + row.spouseNetIncome + row.retirementDrawdown + row.dividendIncome + specialIncome + row.mutualAidPayoutNet
   // 出ていくお金（税・ローン・住宅費・生活費・特別支出）
   const totalOutgoing = row.businessExpenses + totalTax + row.loanRepaymentAnnual + row.housingTaxAnnual + row.livingCostAnnual + specialExpense
   // 貯めるお金（共済掛金 + 投資積立）
@@ -102,6 +102,12 @@ function DetailPanel({ row }: { row: AnnualRow }) {
               <tr className="border-b border-gray-100">
                 <td className="py-1 pl-3 text-gray-500">特別収入</td>
                 <td className="py-1 text-right text-green-600">+{fmtM(specialIncome)} 万円/月</td>
+              </tr>
+            )}
+            {row.mutualAidPayoutNet > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1 pl-3 text-gray-500">共済受取（税引後）</td>
+                <td className="py-1 text-right text-green-600">+{fmtM(row.mutualAidPayoutNet)} 万円/月</td>
               </tr>
             )}
             <tr className="border-b-2 border-green-300">
