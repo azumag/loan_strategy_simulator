@@ -185,9 +185,11 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         }
         mutualAidPayoutNet = bankruptcyNet + smallBizNet
         cash += mutualAidPayoutNet
-        // 受取後は累積額を0にリセット（表示用）
-        bankruptcyMutualAccumulated = 0
-        smallBusinessMutualAccumulated = 0
+        // 一括受取の場合のみ累積額をリセット（分割は退職後に毎年支払われる）
+        if (mutualAid.smallBusinessMutualPayoutMethod === 'lump_sum') {
+          bankruptcyMutualAccumulated = 0
+          smallBusinessMutualAccumulated = 0
+        }
       }
 
       if (stage.workStyle === 'self_employed') {
