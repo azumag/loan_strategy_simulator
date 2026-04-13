@@ -185,6 +185,9 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         }
         mutualAidPayoutNet = bankruptcyNet + smallBizNet
         cash += mutualAidPayoutNet
+        // 受取後は累積額を0にリセット（表示用）
+        bankruptcyMutualAccumulated = 0
+        smallBusinessMutualAccumulated = 0
       }
 
       if (stage.workStyle === 'self_employed') {
@@ -319,6 +322,7 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
           // netCashflow に加算されるよう specialCashflow を使わずここで直接 cash に足す
           // （grossIncome に含まれているので netCashflow 計算に自動包含）
           annuityBalance = Math.max(0, annuityBalance - annuityThisYear)
+          smallBusinessMutualAccumulated = Math.max(0, smallBusinessMutualAccumulated - annuityThisYear)
         }
       }
     }
