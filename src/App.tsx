@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ScenarioProvider } from './store/scenario-store'
+import { ToastProvider } from './components/ui/ToastContext'
 import { Header } from './components/layout/Header'
 import { StepNavigation, StepId } from './components/layout/StepNavigation'
 import { BasicConditionForm } from './components/inputs/BasicConditionForm'
@@ -53,7 +54,9 @@ function AppContent() {
 function App() {
   return (
     <ScenarioProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </ScenarioProvider>
   )
 }

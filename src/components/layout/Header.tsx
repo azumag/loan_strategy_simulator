@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useScenario } from '../../store/scenario-store'
+import { useToast } from '../ui/ToastContext'
 import {
   saveNewScenario,
   loadScenarioById,
@@ -19,8 +20,8 @@ export function Header() {
 
   const [savedList, setSavedList] = useState<{ id: string; name: string }[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [msg, setMsg] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
+  const { toast } = useToast()
   const panelRef = useRef<HTMLDivElement>(null)
 
   const refresh = () => {
@@ -41,19 +42,14 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [panelOpen])
 
-  const flash = (text: string) => {
-    setMsg(text)
-    setTimeout(() => setMsg(''), 2000)
-  }
-
   const handleSave = () => {
     if (activeId) {
       saveScenario(scenario, activeId)
-      flash('上書き保存')
+      toast('上書き保存')
     } else {
       const id = saveNewScenario(scenario)
       setActiveId(id)
-      flash('保存しました')
+      toast('保存しました')
     }
     refresh()
   }
@@ -62,7 +58,7 @@ export function Header() {
     const id = saveNewScenario(scenario)
     setActiveId(id)
     refresh()
-    flash('別名保存しました')
+    toast('別名保存しました')
   }
 
   const handleNew = () => {
@@ -70,7 +66,7 @@ export function Header() {
     dispatch({ type: 'RESET' })
     setActiveId(id)
     refresh()
-    flash('新規作成しました')
+    toast('新規作成しました')
   }
 
   const handleSelect = (id: string) => {
@@ -79,7 +75,7 @@ export function Header() {
     if (loaded) {
       dispatch({ type: 'LOAD', payload: loaded })
       setActiveId(id)
-      flash('読み込みました')
+      toast('読み込みました')
     }
   }
 
@@ -88,7 +84,7 @@ export function Header() {
     deleteScenario(id)
     if (activeId === id) setActiveId(null)
     refresh()
-    flash('削除しました')
+    toast('削除しました')
   }
 
   const handleReorder = (id: string, direction: 'up' | 'down') => {
@@ -176,8 +172,6 @@ export function Header() {
               一覧 {panelOpen ? '▲' : '▼'}
             </button>
           )}
-
-          {msg && <span className="text-xs text-green-600 font-medium">{msg}</span>}
 
           {/* ドロップダウンパネル */}
           {panelOpen && savedList.length > 0 && (

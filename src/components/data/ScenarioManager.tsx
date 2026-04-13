@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useScenario } from '../../store/scenario-store'
+import { useToast } from '../ui/ToastContext'
 import {
   saveScenario,
   saveNewScenario,
@@ -15,7 +16,7 @@ export function ScenarioManager() {
   const { scenario, dispatch } = useScenario()
   const [savedList, setSavedList] = useState<{ id: string; name: string }[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [msg, setMsg] = useState('')
+  const { toast } = useToast()
 
   const refresh = () => {
     setSavedList(listScenarios())
@@ -23,11 +24,6 @@ export function ScenarioManager() {
   }
 
   useEffect(() => { refresh() }, [])
-
-  const showMsg = (text: string) => {
-    setMsg(text)
-    setTimeout(() => setMsg(''), 2000)
-  }
 
   // 上書き保存（現在のIDへ）
   const handleOverwrite = () => {
@@ -37,7 +33,7 @@ export function ScenarioManager() {
     }
     saveScenario(scenario, activeId)
     refresh()
-    showMsg('上書き保存しました')
+    toast('上書き保存しました')
   }
 
   // 新規保存
@@ -45,7 +41,7 @@ export function ScenarioManager() {
     const newId = saveNewScenario(scenario)
     setActiveId(newId)
     refresh()
-    showMsg('新規保存しました')
+    toast('新規保存しました')
   }
 
   // シナリオをロード
@@ -54,7 +50,7 @@ export function ScenarioManager() {
     if (loaded) {
       dispatch({ type: 'LOAD', payload: loaded })
       setActiveId(id)
-      showMsg('読み込みました')
+      toast('読み込みました')
     }
   }
 
@@ -70,7 +66,7 @@ export function ScenarioManager() {
     deleteScenario(id)
     if (activeId === id) setActiveId(null)
     refresh()
-    showMsg('削除しました')
+    toast('削除しました')
   }
 
   // デフォルト値で新規シナリオを作成してロード
@@ -79,7 +75,7 @@ export function ScenarioManager() {
     dispatch({ type: 'RESET' })
     setActiveId(newId)
     refresh()
-    showMsg('新規シナリオを作成しました')
+    toast('新規シナリオを作成しました')
   }
 
   const handleReset = () => {
@@ -119,7 +115,6 @@ export function ScenarioManager() {
         >
           リセット
         </button>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
       </div>
 
       {/* 保存済み一覧 */}
