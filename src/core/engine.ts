@@ -462,18 +462,21 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
       nisaContributed += effectiveNisaContrib
 
       // NISA满额时且autoOverflow为true时，将annualNisaContrib的剩余额度转向征税账户
-      const nisaIsFull = nisaRoom <= 0 || annualNisaContrib <= 0
-      if (autoOverflow && nisaIsFull) {
-        const overflowAmount = Math.min(annualNisaContrib, Math.max(0, cash))
+      // autoOverflow: NISAに入りきらなかった分を課税口座に回す
+      let overflowAmount = 0
+      if (autoOverflow && annualNisaContrib > 0) {
+        const nisaShortfall = annualNisaContrib - effectiveNisaContrib
+        overflowAmount = Math.min(nisaShortfall, Math.max(0, cash))
         cash -= overflowAmount
         liquidAssets += overflowAmount
-        effectiveTaxableContrib = overflowAmount
-      } else {
-        // 征税口座積立
-        effectiveTaxableContrib = Math.min(annualTaxableContrib, Math.max(0, cash))
-        cash -= effectiveTaxableContrib
-        liquidAssets += effectiveTaxableContrib
       }
+
+      // 通常の課税口座積立（overflow分とは別に積み立て）
+      const regularTaxable = Math.min(annualTaxableContrib, Math.max(0, cash))
+      cash -= regularTaxable
+      liquidAssets += regularTaxable
+
+      effectiveTaxableContrib = overflowAmount + regularTaxable
     }
     // else: isRetiredWithDrawdown => both contributions remain 0
 

@@ -133,19 +133,33 @@ export function AssetForm() {
           ※ 運用益は非課税。積立額が生涯上限（1800万円）または年間上限（360万円）を超える場合は自動で上限適用。
         </p>
 
-        {/* NISA满额后自动转向征税账户 */}
+        {/* NISA満額後の課税口座自動積立トグル */}
         {!isUnified && (
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
+          <div className="flex items-center justify-between pt-2 border-t border-green-200">
+            <div className="flex-1">
+              <label htmlFor="autoOverflowToTaxableWhenNisaFull" className="text-sm font-medium text-gray-700 cursor-pointer">
+                NISA満額後、課税口座に自動積み立て
+              </label>
+              <p className="text-xs text-gray-500 mt-0.5">
+                NISA枠が上限に達した場合、NISA積立額の余剰分を自動的に課税口座へ振り替えます
+              </p>
+            </div>
+            <button
               id="autoOverflowToTaxableWhenNisaFull"
-              checked={assets.autoOverflowToTaxableWhenNisaFull ?? true}
-              onChange={(e) => dispatch({ type: 'UPDATE_ASSETS', payload: { autoOverflowToTaxableWhenNisaFull: e.target.checked } })}
-              className="rounded"
-            />
-            <label htmlFor="autoOverflowToTaxableWhenNisaFull" className="text-sm text-gray-700">
-              NISA満額後、課税口座に自動積み立て
-            </label>
+              type="button"
+              role="switch"
+              aria-checked={assets.autoOverflowToTaxableWhenNisaFull ?? true}
+              onClick={() => dispatch({ type: 'UPDATE_ASSETS', payload: { autoOverflowToTaxableWhenNisaFull: !(assets.autoOverflowToTaxableWhenNisaFull ?? true) } })}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                (assets.autoOverflowToTaxableWhenNisaFull ?? true) ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  (assets.autoOverflowToTaxableWhenNisaFull ?? true) ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
         )}
       </div>
