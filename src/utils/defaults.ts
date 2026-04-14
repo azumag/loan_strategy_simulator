@@ -81,6 +81,8 @@ export const DEFAULT_SCENARIO: Scenario = {
     nisaStockRatio: 0,
     liquidStockRatio: 0,
     stockDividendYield: 0.03,
+    totalAnnualInvestment: 0,
+    investmentContributionMode: 'separate',
   },
   spouseCareerStages: [],
   events: [],

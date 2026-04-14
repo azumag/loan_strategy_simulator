@@ -28,6 +28,8 @@ function migrateScenario(loaded: unknown): Scenario {
       nisaStockRatio: (s.assets as any)?.nisaStockRatio ?? 0,
       liquidStockRatio: (s.assets as any)?.liquidStockRatio ?? 0,
       stockDividendYield: (s.assets as any)?.stockDividendYield ?? 0.03,
+      totalAnnualInvestment: (s.assets as any)?.totalAnnualInvestment ?? 0,
+      investmentContributionMode: (s.assets as any)?.investmentContributionMode ?? 'separate',
     },
     strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
     mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },

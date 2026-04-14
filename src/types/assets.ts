@@ -1,3 +1,5 @@
+export type InvestmentContributionMode = 'separate' | 'unified'
+
 export interface AssetConfig {
   initialCash: number
   initialLiquidAssets: number    // 課税口座（流動資産）
@@ -13,6 +15,9 @@ export interface AssetConfig {
   nisaStockRatio?: number            // NISAのうち個別株の割合 (0〜1)
   liquidStockRatio?: number          // 課税口座のうち個別株の割合 (0〜1)
   stockDividendYield?: number        // 個別株の配当利回り (0〜1)
+  // 年間投資設定（NISA優先モード）
+  totalAnnualInvestment?: number                          // 年間投資総額 (unified mode時)
+  investmentContributionMode?: InvestmentContributionMode  // 'separate' | 'unified'
 }
 
 export interface HousingConfig {
