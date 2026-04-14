@@ -51,6 +51,46 @@ export function AssetForm() {
         />
       </div>
 
+      {/* 投資モード切替 */}
+      <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-blue-800">年間投資設定</h3>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="investmentMode"
+              value="separate"
+              checked={!isUnified}
+              onChange={() => dispatch({ type: 'UPDATE_ASSETS', payload: { investmentContributionMode: 'separate' } })}
+            />
+            <span className="text-sm text-gray-700">分離</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="investmentMode"
+              value="unified"
+              checked={isUnified}
+              onChange={() => dispatch({ type: 'UPDATE_ASSETS', payload: { investmentContributionMode: 'unified' } })}
+            />
+            <span className="text-sm text-gray-700">統合（NISARA優先）</span>
+          </label>
+        </div>
+        {isUnified ? (
+          <SliderInput
+            label="年間投資総額"
+            value={(assets.totalAnnualInvestment ?? 0) / 10000}
+            onChange={(v) => update('totalAnnualInvestment', v * 10000)}
+            min={0} max={600} step={12} unit="万円/年"
+            note="NISARA→征税口座の優先順で自動配分"
+          />
+        ) : (
+          <p className="text-xs text-gray-500">
+            ※ NISAと征税口座に分けて積み立てます。NISARA満額後の征税口座への自動積み立ては下部のトグルで設定できます。
+          </p>
+        )}
+      </div>
+
       {/* NISA */}
       <div className="border border-green-200 bg-green-50 rounded-lg p-4 space-y-4">
         <div className="flex items-center justify-between">
