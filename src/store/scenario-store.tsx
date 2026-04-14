@@ -30,6 +30,7 @@ function migrateScenario(loaded: unknown): Scenario {
       stockDividendYield: (s.assets as any)?.stockDividendYield ?? 0.03,
       totalAnnualInvestment: (s.assets as any)?.totalAnnualInvestment ?? 0,
       investmentContributionMode: (s.assets as any)?.investmentContributionMode ?? 'separate',
+      autoOverflowToTaxableWhenNisaFull: (s.assets as any)?.autoOverflowToTaxableWhenNisaFull ?? true,
     },
     strategy: { ...DEFAULT_SCENARIO.strategy, ...(s.strategy ?? {}) },
     mutualAid: { ...DEFAULT_SCENARIO.mutualAid, ...(s.mutualAid ?? {}) },

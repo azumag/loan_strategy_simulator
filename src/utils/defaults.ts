@@ -83,6 +83,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     stockDividendYield: 0.03,
     totalAnnualInvestment: 0,
     investmentContributionMode: 'separate',
+    autoOverflowToTaxableWhenNisaFull: true,
   },
   spouseCareerStages: [],
   events: [],

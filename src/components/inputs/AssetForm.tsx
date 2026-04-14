@@ -92,6 +92,22 @@ export function AssetForm() {
         <p className="text-xs text-green-600">
           ※ 運用益は非課税。積立額が生涯上限（1800万円）または年間上限（360万円）を超える場合は自動で上限適用。
         </p>
+
+        {/* NISA满额后自动转向征税账户 */}
+        {!isUnified && (
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="autoOverflowToTaxableWhenNisaFull"
+              checked={assets.autoOverflowToTaxableWhenNisaFull ?? true}
+              onChange={(e) => dispatch({ type: 'UPDATE_ASSETS', payload: { autoOverflowToTaxableWhenNisaFull: e.target.checked } })}
+              className="rounded"
+            />
+            <label htmlFor="autoOverflowToTaxableWhenNisaFull" className="text-sm text-gray-700">
+              NISA満額後、課税口座に自動積み立て
+            </label>
+          </div>
+        )}
       </div>
 
       {/* 課税口座 */}

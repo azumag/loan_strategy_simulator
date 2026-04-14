@@ -449,9 +449,10 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
 
       effectiveNisaContrib = nisaFromTotal
     } else if (contributionMode === 'separate' && !isRetiredWithDrawdown) {
-      // separate mode: 既存動作
+      // separate mode
       const annualNisaContrib = assets.annualNisaContribution ?? 0
       const annualTaxableContrib = assets.annualSavingsContribution ?? 0
+      const autoOverflow = assets.autoOverflowToTaxableWhenNisaFull ?? true
 
       // NISA積立（年間上限・生涯上限を考慮）
       const nisaRoom = Math.max(0, NISA_LIFETIME_CAP - nisaContributed)
@@ -460,10 +461,19 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
       nisaBalance += effectiveNisaContrib
       nisaContributed += effectiveNisaContrib
 
-      // 課税口座積立
-      effectiveTaxableContrib = Math.min(annualTaxableContrib, Math.max(0, cash))
-      cash -= effectiveTaxableContrib
-      liquidAssets += effectiveTaxableContrib
+      // NISA满额时且autoOverflow为true时，将annualNisaContrib的剩余额度转向征税账户
+      const nisaIsFull = nisaRoom <= 0 || annualNisaContrib <= 0
+      if (autoOverflow && nisaIsFull) {
+        const overflowAmount = Math.min(annualNisaContrib, Math.max(0, cash))
+        cash -= overflowAmount
+        liquidAssets += overflowAmount
+        effectiveTaxableContrib = overflowAmount
+      } else {
+        // 征税口座積立
+        effectiveTaxableContrib = Math.min(annualTaxableContrib, Math.max(0, cash))
+        cash -= effectiveTaxableContrib
+        liquidAssets += effectiveTaxableContrib
+      }
     }
     // else: isRetiredWithDrawdown => both contributions remain 0
 
