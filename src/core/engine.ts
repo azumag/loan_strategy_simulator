@@ -312,9 +312,13 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         const augmentedStage = annuityThisYear > 0
           ? { ...stage, retirementOtherIncomeAnnual: stage.retirementOtherIncomeAnnual + annuityThisYear }
           : stage
-        grossIncome = augmentedStage.retirementNationalPensionAnnual +
+        const totalPensionIncome =
+          augmentedStage.retirementNationalPensionAnnual +
           augmentedStage.retirementEmployeesPensionAnnual +
           augmentedStage.retirementOtherIncomeAnnual
+        // grossIncome からは年金額のみ（共済受取は mutualAidPayoutNet で明示表示）
+        grossIncome = totalPensionIncome - annuityThisYear
+        mutualAidPayoutNet = annuityThisYear
         const taxResult = calcRetiredTax(augmentedStage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
@@ -322,8 +326,6 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         socialInsurance = taxResult.socialInsurance
         deductionBreakdown = taxResult.deductionBreakdown
         if (annuityThisYear > 0) {
-          // netCashflow に加算されるよう specialCashflow を使わずここで直接 cash に足す
-          // （grossIncome に含まれているので netCashflow 計算に自動包含）
           annuityBalance = Math.max(0, annuityBalance - annuityThisYear)
           smallBusinessMutualAccumulated = Math.max(0, smallBusinessMutualAccumulated - annuityThisYear)
         }
