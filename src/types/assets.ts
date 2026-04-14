@@ -18,7 +18,7 @@ export interface AssetConfig {
   // 年間投資設定（NISA優先モード）
   totalAnnualInvestment?: number                          // 年間投資総額 (unified mode時)
   investmentContributionMode?: InvestmentContributionMode  // 'separate' | 'unified'
-  // NISA满额后自动转向征税账户
+  // NISA満額後に課税口座へ自動積立
   autoOverflowToTaxableWhenNisaFull?: boolean
 }
 

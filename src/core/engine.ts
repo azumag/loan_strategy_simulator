@@ -461,7 +461,6 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
       nisaBalance += effectiveNisaContrib
       nisaContributed += effectiveNisaContrib
 
-      // NISA满额时且autoOverflow为true时，将annualNisaContrib的剩余额度转向征税账户
       // autoOverflow: NISAに入りきらなかった分を課税口座に回す
       let overflowAmount = 0
       if (autoOverflow && annualNisaContrib > 0) {
