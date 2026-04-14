@@ -18,6 +18,7 @@ function rowClass(row: AnnualRow, payoffAge: number | null) {
 
 const WORK_STYLE_LABEL: Record<string, string> = {
   self_employed: '個人事業',
+  micro_corporation: '法人（M）',
   employee: '会社員',
   retired: '退職後',
 }
