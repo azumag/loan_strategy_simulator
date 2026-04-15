@@ -20,6 +20,7 @@ export interface ScenarioConfig {
   investmentReturnRate: number
   inflationRate: number
   macroEconomicSlideRate: number
+  incomeInflationRate: number
   comparePrepayment: boolean
 }
 

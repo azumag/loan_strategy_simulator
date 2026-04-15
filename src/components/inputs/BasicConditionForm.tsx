@@ -61,6 +61,14 @@ export function BasicConditionForm() {
         />
 
         <SliderInput
+          label="収入インフレ連動率"
+          value={parseFloat(((sc.incomeInflationRate ?? 0) * 100).toFixed(1))}
+          onChange={(v) => update('incomeInflationRate', v / 100)}
+          min={0} max={5} step={0.1} unit="%"
+          note="現役時の収入が毎年この率で増加する想定。0%なら収入固定。"
+        />
+
+        <SliderInput
           label="マクロ経済スライド調整率"
           value={parseFloat(((sc.macroEconomicSlideRate ?? 0.009) * 100).toFixed(1))}
           onChange={(v) => update('macroEconomicSlideRate', v / 100)}

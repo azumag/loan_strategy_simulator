@@ -167,6 +167,10 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
     if (stage) {
       workStyle = stage.workStyle
 
+      // 収入のインフレ連動ファクター
+      const incomeInflation = sc.incomeInflationRate ?? 0
+      const incomeFactor = incomeInflation > 0 ? Math.pow(1 + incomeInflation, age - sc.startAge) : 1
+
       // ── 共済廃業処理: 自営業 → 非自営業への移行年 ──
       if ((prevWorkStyle === 'self_employed' || prevWorkStyle === 'micro_corporation') && workStyle !== 'self_employed' && workStyle !== 'micro_corporation') {
         // 倒産防止共済: 解約手当金（雑所得）を税引き後で受取
@@ -223,10 +227,14 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
           bankruptcyMutualAnnual: effectiveBankruptcy,
           smallBusinessMutualAnnual: effectiveSmallBiz,
           businessExpenseAnnual: stage.businessExpenseAnnual + homeOfficeDeductionTotal,
+          ...(incomeFactor !== 1 ? {
+            grossRevenueAnnual: Math.round(stage.grossRevenueAnnual * incomeFactor),
+            sideIncomeAnnual: Math.round(stage.sideIncomeAnnual * incomeFactor),
+          } : {}),
         }
         homeOfficeExpenseTotal = homeOfficeDeductionTotal
         homeOfficeExpenseBreakdown = homeOfficeDeductionBreakdown
-        grossIncome = stage.grossRevenueAnnual + stage.sideIncomeAnnual
+        grossIncome = resolvedStage.grossRevenueAnnual + resolvedStage.sideIncomeAnnual
         businessExpenses = resolvedStage.businessExpenseAnnual
         const taxResult = calcSoleProprietorTax(resolvedStage, effectiveTax)
         deductions = taxResult.deductions
@@ -272,6 +280,11 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
           bankruptcyMutualAnnual: effectiveBankruptcy,
           smallBusinessMutualAnnual: effectiveSmallBiz,
           soloBusinessExpenseAnnual: stage.soloBusinessExpenseAnnual + homeOfficeDeductionTotal,
+          ...(incomeFactor !== 1 ? {
+            corporateRevenueAnnual: Math.round(stage.corporateRevenueAnnual * incomeFactor),
+            directorCompensationAnnual: Math.round(stage.directorCompensationAnnual * incomeFactor),
+            soloGrossRevenueAnnual: Math.round(stage.soloGrossRevenueAnnual * incomeFactor),
+          } : {}),
         }
         homeOfficeExpenseTotal = homeOfficeDeductionTotal
         homeOfficeExpenseBreakdown = homeOfficeDeductionBreakdown
@@ -295,11 +308,18 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         if (effectiveSmallBiz > 0) smallBusinessMutualYears++
       } else if (stage.workStyle === 'employee') {
         isTakehome = stage.salaryInputMode === 'takehome'
+        const inflatedStage = incomeFactor !== 1 ? {
+          ...stage,
+          grossSalaryAnnual: stage.grossSalaryAnnual ? Math.round(stage.grossSalaryAnnual * incomeFactor) : undefined,
+          takehomeSalaryAnnual: stage.takehomeSalaryAnnual ? Math.round(stage.takehomeSalaryAnnual * incomeFactor) : undefined,
+          bonusAnnual: Math.round(stage.bonusAnnual * incomeFactor),
+          sideIncomeAnnual: Math.round(stage.sideIncomeAnnual * incomeFactor),
+        } : stage
         const sal = isTakehome
-          ? (stage.takehomeSalaryAnnual ?? 0) + stage.bonusAnnual
-          : (stage.grossSalaryAnnual ?? 0) + stage.bonusAnnual + stage.sideIncomeAnnual
+          ? (inflatedStage.takehomeSalaryAnnual ?? 0) + inflatedStage.bonusAnnual
+          : (inflatedStage.grossSalaryAnnual ?? 0) + inflatedStage.bonusAnnual + inflatedStage.sideIncomeAnnual
         grossIncome = sal
-        const taxResult = calcEmployeeTax(stage, effectiveTax)
+        const taxResult = calcEmployeeTax(inflatedStage, effectiveTax)
         deductions = taxResult.deductions
         incomeTax = taxResult.incomeTax
         residentTax = taxResult.residentTax

@@ -9,6 +9,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     investmentReturnRate: 0.03,
     inflationRate: 0.01,
     macroEconomicSlideRate: 0.009,
+    incomeInflationRate: 0,
     comparePrepayment: false,
   },
   loan: {
