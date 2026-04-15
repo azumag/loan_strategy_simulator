@@ -19,6 +19,7 @@ export interface ScenarioConfig {
   minimumCashBuffer: number
   investmentReturnRate: number
   inflationRate: number
+  macroEconomicSlideRate: number
   comparePrepayment: boolean
 }
 

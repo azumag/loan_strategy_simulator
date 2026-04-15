@@ -307,11 +307,22 @@ export function simulate(scenario: Scenario, disablePrepayment: boolean = false)
         socialInsuranceBreakdown = taxResult.socialInsuranceBreakdown
         deductionBreakdown = taxResult.deductionBreakdown
       } else if (stage.workStyle === 'retired') {
+        // 年金のインフレ連動（マクロ経済スライド調整付き）
+        // 年金改定率 = インフレ率 - マクロ経済スライド調整率（ただし名目下限0%）
+        const macroSlide = sc.macroEconomicSlideRate ?? 0.009
+        const pensionAdjustRate = Math.max(0, sc.inflationRate - macroSlide)
+        const pensionFactor = Math.pow(1 + pensionAdjustRate, age - sc.startAge)
+        const adjustedStage = {
+          ...stage,
+          retirementNationalPensionAnnual: Math.round(stage.retirementNationalPensionAnnual * pensionFactor),
+          retirementEmployeesPensionAnnual: Math.round(stage.retirementEmployeesPensionAnnual * pensionFactor),
+        }
+
         // 小規模企業共済の分割受取分を年金収入に加算して課税
         const annuityThisYear = annuityBalance > 0 ? Math.min(annuityAnnual, annuityBalance) : 0
         const augmentedStage = annuityThisYear > 0
-          ? { ...stage, retirementOtherIncomeAnnual: stage.retirementOtherIncomeAnnual + annuityThisYear }
-          : stage
+          ? { ...adjustedStage, retirementOtherIncomeAnnual: adjustedStage.retirementOtherIncomeAnnual + annuityThisYear }
+          : adjustedStage
         const totalPensionIncome =
           augmentedStage.retirementNationalPensionAnnual +
           augmentedStage.retirementEmployeesPensionAnnual +

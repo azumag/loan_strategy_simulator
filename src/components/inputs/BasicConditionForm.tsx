@@ -57,7 +57,15 @@ export function BasicConditionForm() {
           value={parseFloat((sc.inflationRate * 100).toFixed(1))}
           onChange={(v) => update('inflationRate', v / 100)}
           min={0} max={5} step={0.1} unit="%"
-          note="生活費が増加余年増加するという想定を反映します。"
+          note="生活費が毎年増加するという想定を反映します。"
+        />
+
+        <SliderInput
+          label="マクロ経済スライド調整率"
+          value={parseFloat(((sc.macroEconomicSlideRate ?? 0.009) * 100).toFixed(1))}
+          onChange={(v) => update('macroEconomicSlideRate', v / 100)}
+          min={0} max={2} step={0.1} unit="%"
+          note="年金改定率 = インフレ率 − この値。年金の実質価値が毎年この分だけ目減りします。"
         />
       </div>
     </div>
