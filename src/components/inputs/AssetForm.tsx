@@ -10,9 +10,6 @@ export function AssetForm() {
   const update = (key: keyof typeof assets, value: number) =>
     dispatch({ type: 'UPDATE_ASSETS', payload: { [key]: value } })
 
-  const updateStr = (key: keyof typeof assets, value: string) =>
-    dispatch({ type: 'UPDATE_ASSETS', payload: { [key]: value } })
-
   const nisaBalance = (assets.initialNisaBalance ?? 0) / 10000
   const nisaUsageRatio = Math.min(100, Math.round((nisaBalance / NISA_LIFETIME_CAP) * 100))
   const isUnified = (assets.investmentContributionMode ?? 'separate') === 'unified'
