@@ -29,6 +29,8 @@ export function ChartView() {
 
   const hasNisa = rows.some((r) => r.endingNisaBalance > 0)
   const hasLiquid = rows.some((r) => r.endingLiquidAssets > 0)
+  const hasSmallBiz = rows.some((r) => r.smallBusinessMutualAccumulated > 0)
+  const hasBankruptcy = rows.some((r) => r.bankruptcyMutualAccumulated > 0)
 
   const balanceData = {
     labels,
@@ -55,6 +57,22 @@ export function ChartView() {
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
         tension: 0.1,
         borderDash: [4, 2],
+      }] : []),
+      ...(hasSmallBiz ? [{
+        label: '小規模企業共済',
+        data: rows.map((r) => toMan(r.smallBusinessMutualAccumulated)),
+        borderColor: 'rgb(245, 158, 11)',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        tension: 0.1,
+        borderDash: [6, 3],
+      }] : []),
+      ...(hasBankruptcy ? [{
+        label: '倒産防止共済',
+        data: rows.map((r) => toMan(r.bankruptcyMutualAccumulated)),
+        borderColor: 'rgb(236, 72, 153)',
+        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+        tension: 0.1,
+        borderDash: [6, 3],
       }] : []),
       {
         label: '総資産',
