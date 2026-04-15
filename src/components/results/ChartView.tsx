@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -110,10 +111,27 @@ export function ChartView() {
         <h3 className="text-base font-semibold text-gray-700 mb-4">資産・残債推移（万円）</h3>
         <Line data={balanceData} options={CHART_OPTIONS} />
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-base font-semibold text-gray-700 mb-4">年間収支推移（万円）</h3>
-        <Bar data={cashflowData} options={CHART_OPTIONS} />
-      </div>
+      <CashflowChart data={cashflowData} />
+    </div>
+  )
+}
+
+function CashflowChart({ data }: { data: Parameters<typeof Bar>[0]['data'] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-white rounded-lg border border-gray-200">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-6 text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <span>年間収支推移（万円）</span>
+        <span className="text-xs text-gray-400">{open ? '▲ 閉じる' : '▼ 開く'}</span>
+      </button>
+      {open && (
+        <div className="px-6 pb-6">
+          <Bar data={data} options={CHART_OPTIONS} />
+        </div>
+      )}
     </div>
   )
 }
