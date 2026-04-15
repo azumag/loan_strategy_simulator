@@ -103,13 +103,15 @@ export function AssetForm() {
             min={0} max={NISA_LIFETIME_CAP} step={50} unit="万円"
             note="現時点のNISA口座残高"
           />
-          <SliderInput
-            label="年間NISA積立額"
-            value={(assets.annualNisaContribution ?? 0) / 10000}
-            onChange={(v) => update('annualNisaContribution', v * 10000)}
-            min={0} max={360} step={12} unit="万円/年"
-            note="新NISA上限360万円/年（成長240+積立120）"
-          />
+          {!isUnified && (
+            <SliderInput
+              label="年間NISA積立額"
+              value={(assets.annualNisaContribution ?? 0) / 10000}
+              onChange={(v) => update('annualNisaContribution', v * 10000)}
+              min={0} max={360} step={12} unit="万円/年"
+              note="新NISA上限360万円/年（成長240+積立120）"
+            />
+          )}
         </div>
 
         {/* NISA枠使用状況 */}
@@ -172,13 +174,15 @@ export function AssetForm() {
             min={0} max={10000} step={100} unit="万円"
             note="特定口座・一般口座など。運用利回りが毎年適用されます。"
           />
-          <SliderInput
-            label="年間積立額"
-            value={assets.annualSavingsContribution / 10000}
-            onChange={(v) => update('annualSavingsContribution', v * 10000)}
-            min={0} max={500} step={10} unit="万円/年"
-            note="毎年現金から課税口座へ移動する金額"
-          />
+          {!isUnified && (
+            <SliderInput
+              label="年間積立額"
+              value={assets.annualSavingsContribution / 10000}
+              onChange={(v) => update('annualSavingsContribution', v * 10000)}
+              min={0} max={500} step={10} unit="万円/年"
+              note="毎年現金から課税口座へ移動する金額"
+            />
+          )}
         </div>
         <p className="text-xs text-gray-500">
           ※ 積立はキャッシュフローから差し引かれます。現金残高が不足する場合は積立を抑制します。
