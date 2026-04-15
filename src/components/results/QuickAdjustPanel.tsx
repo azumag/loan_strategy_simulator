@@ -4,7 +4,7 @@ import { SliderInput } from '../ui/SliderInput'
 
 export function QuickAdjustPanel() {
   const { scenario, dispatch } = useScenario()
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const sc = scenario.scenario
   const loan = scenario.loan
@@ -19,17 +19,18 @@ export function QuickAdjustPanel() {
   }
 
   return (
-    <div className="sticky top-[41px] z-30 border-b border-indigo-200 bg-indigo-50/95 backdrop-blur-sm shadow-sm">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-100 transition-colors"
-      >
-        <span>クイック調整</span>
-        <span className="text-xs">{open ? '▲ 閉じる' : '▼ 開く'}</span>
-      </button>
+    <div className="sticky top-[41px] z-30 bg-indigo-50/95 backdrop-blur-sm shadow-sm">
+      <div className="max-w-7xl mx-auto px-4">
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center justify-between py-2 text-sm font-semibold text-indigo-800 hover:text-indigo-600 transition-colors"
+        >
+          <span>クイック調整</span>
+          <span className="text-xs">{open ? '▲ 閉じる' : '▼ 開く'}</span>
+        </button>
 
-      {open && (
-        <div className="px-4 pb-4 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {open && (
+          <div className="pb-4 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <SliderInput
             label="運用利回り"
             value={parseFloat((sc.investmentReturnRate * 100).toFixed(1))}
@@ -91,8 +92,9 @@ export function QuickAdjustPanel() {
             onChange={(v) => dispatch({ type: 'UPDATE_ASSETS', payload: { annualRetirementDrawdown: v * 10000 } })}
             min={0} max={500} step={10} unit="万円/年"
           />
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
