@@ -19,7 +19,7 @@ export function QuickAdjustPanel() {
   }
 
   return (
-    <div className="border border-indigo-200 bg-indigo-50 rounded-lg overflow-hidden">
+    <div className="sticky top-[41px] z-30 border-b border-indigo-200 bg-indigo-50/95 backdrop-blur-sm shadow-sm">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-100 transition-colors"

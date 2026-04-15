@@ -28,6 +28,7 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <StepNavigation currentStep={step} onStepChange={setStep} />
+      {step === 'result' && <QuickAdjustPanel />}
       <main className="max-w-7xl mx-auto px-4 py-6">
         {step === 'basic' && <BasicConditionForm />}
         {step === 'loan' && <LoanConditionForm />}
@@ -41,7 +42,6 @@ function AppContent() {
         {step === 'prepayment' && <PrepaymentStrategyEditor />}
         {step === 'result' && (
           <div className="space-y-6">
-            <QuickAdjustPanel />
             <SummaryCard />
             <BreakevenCard />
             <ChartView />
