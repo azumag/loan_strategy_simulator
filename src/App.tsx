@@ -17,6 +17,7 @@ import { SummaryCard } from './components/results/SummaryCard'
 import { BreakevenCard } from './components/results/BreakevenCard'
 import { AnnualTable } from './components/results/AnnualTable'
 import { ChartView } from './components/results/ChartView'
+import { QuickAdjustPanel } from './components/results/QuickAdjustPanel'
 
 
 
@@ -40,6 +41,7 @@ function AppContent() {
         {step === 'prepayment' && <PrepaymentStrategyEditor />}
         {step === 'result' && (
           <div className="space-y-6">
+            <QuickAdjustPanel />
             <SummaryCard />
             <BreakevenCard />
             <ChartView />
