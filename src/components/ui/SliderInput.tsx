@@ -1,3 +1,5 @@
+import { LucideIcon } from 'lucide-react'
+
 type SliderInputProps = {
   label: string
   value: number
@@ -8,31 +10,39 @@ type SliderInputProps = {
   unit?: string
   note?: string
   className?: string
+  icon?: LucideIcon
 }
 
-export function SliderInput({ label, value, onChange, min, max, step, unit, note, className }: SliderInputProps) {
+export function SliderInput({
+  label, value, onChange, min, max, step, unit, note, className, icon: Icon,
+}: SliderInputProps) {
+  const pct = ((value - min) / (max - min)) * 100
+
   return (
-    <div className={className}>
-      <div className="flex justify-between items-center mb-1">
-        <label className="block text-sm font-medium text-gray-700">{label}</label>
-        <span className="text-sm font-semibold text-blue-600">
-          {value}{unit && <span className="text-xs text-gray-500 ml-1">{unit}</span>}
-        </span>
+    <div className={`card p-4 anim-slide ${className ?? ''}`}>
+      <div className="flex items-center gap-2 mb-2">
+        {Icon && <Icon size={14} style={{ color: 'var(--fg-3)' }} />}
+        <label className="text-xs font-bold t-fg2">{label}</label>
+        <div className="ml-auto flex items-baseline gap-1">
+          <span className="kpi-num t-brand" style={{ fontSize: 18 }}>{value}</span>
+          {unit && <span className="text-[10px] t-fg4">{unit}</span>}
+        </div>
       </div>
       <input
+        className="range"
         type="range"
         min={min}
         max={max}
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
       />
-      <div className="flex justify-between text-xs text-gray-400 mt-1">
-        <span>{min}{unit && <span className="ml-0.5">{unit}</span>}</span>
-        <span>{max}{unit && <span className="ml-0.5">{unit}</span>}</span>
+      <div className="flex justify-between text-[10px] t-fg4 mt-1 font-mono">
+        <span>{min}{unit}</span>
+        <span className="t-fg3 font-semibold">{pct.toFixed(0)}%</span>
+        <span>{max}{unit}</span>
       </div>
-      {note && <p className="text-xs text-gray-500 mt-1">{note}</p>}
+      {note && <p className="text-[11px] t-fg3 mt-2">{note}</p>}
     </div>
   )
 }
