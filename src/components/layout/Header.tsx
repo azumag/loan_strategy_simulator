@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import {
+  Home, Sun, Moon, Plus,
+  CircleDot, Circle, ChevronUp, ChevronDown, Download,
+} from 'lucide-react'
 import { useScenario } from '../../store/scenario-store'
 import { useToast } from '../ui/ToastContext'
+import { useTheme } from '../../store/theme-store'
 import {
   saveNewScenario,
   loadScenarioById,
@@ -17,6 +22,12 @@ export function Header() {
   const { summary } = result
   const monthly = Math.round(summary.currentMonthlyPayment).toLocaleString()
   const payoff = summary.payoffAge ? `${summary.payoffAge}歳` : '未完済'
+  const feas = summary.retirementFeasibility
+  const feasTone = feas === 'safe' ? 'var(--safe)' : feas === 'warning' ? 'var(--warn)' : 'var(--danger)'
+  const feasLabel = feas === 'safe' ? '安全' : feas === 'warning' ? '注意' : '危険'
+  const feasPct = feas === 'safe' ? 92 : feas === 'warning' ? 58 : 24
+
+  const { mode, toggleMode } = useTheme()
 
   const [savedList, setSavedList] = useState<{ id: string; name: string }[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -31,7 +42,6 @@ export function Header() {
 
   useEffect(() => { refresh() }, [])
 
-  // パネル外クリックで閉じる
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -92,130 +102,123 @@ export function Header() {
     refresh()
   }
 
-  const handleReset = () => {
-    if (confirm('初期値にリセットしますか？（保存データは消えません）')) {
-      dispatch({ type: 'RESET' })
-      setActiveId(null)
-    }
-  }
-
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3 flex-wrap">
-        {/* タイトル */}
-        <h1 className="text-base font-bold text-gray-800 shrink-0">住宅ローンシミュレーター</h1>
-
-        {/* サマリ */}
-        <div className="flex items-center gap-3 text-sm text-gray-600 shrink-0">
-          <span className="hidden sm:inline">月返済: <span className="font-semibold text-gray-900">¥{monthly}</span></span>
-          <span>完済: <span className="font-semibold text-gray-900">{payoff}</span></span>
+    <header
+      className="t-card border-b t-border"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40 }}
+    >
+      {/* Row 1: brand / theme */}
+      <div className="flex items-center gap-3 px-5 py-3">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--brand)', color: 'var(--bg-2)' }}
+          >
+            <Home size={18} />
+          </div>
+          <div>
+            <div className="font-display font-bold t-fg text-[15px] leading-tight">住宅ローンシミュレーター</div>
+            <div className="text-[11px] t-fg3 -mt-px">Strategy Simulator</div>
+          </div>
         </div>
 
         <div className="flex-1" />
 
-        {/* シナリオ管理 — インライン */}
-        <div className="flex items-center gap-2 flex-wrap relative" ref={panelRef}>
-          {savedList.length > 0 && (
-            <select
-              value={activeId ?? ''}
-              onChange={(e) => handleSelect(e.target.value)}
-              className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 max-w-[180px] truncate"
-            >
-              {!activeId && <option value="">（未選択）</option>}
-              {savedList.map((s, i) => (
-                <option key={s.id} value={s.id}>
-                  {i === 0 ? '★ ' : ''}{s.name || '（名称未設定）'}
-                </option>
-              ))}
-            </select>
-          )}
+        <button className="btn btn-ghost !p-2" onClick={toggleMode} title="テーマ切替" aria-label="テーマ切替">
+          {mode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+      </div>
 
-          <button
-            onClick={handleSave}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 shrink-0"
-          >
-            {activeId ? '上書き' : '保存'}
-          </button>
+      {/* Row 2: scenario dock + live summary */}
+      <div className="flex items-center gap-3 px-5 py-2 flex-wrap" style={{ borderTop: '1px solid var(--border-s)' }}>
+        <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0 relative" ref={panelRef}>
+          {savedList.slice(0, 6).map((s) => {
+            const isActive = s.id === activeId
+            return (
+              <button
+                key={s.id}
+                onClick={() => handleSelect(s.id)}
+                className="chip px-3 py-1.5"
+                style={{
+                  background: isActive ? 'var(--brand-soft)' : 'var(--bg-inset)',
+                  color: isActive ? 'var(--brand)' : 'var(--fg-2)',
+                  border: isActive ? '1px solid var(--brand)' : '1px solid transparent',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                {isActive ? <CircleDot size={12} /> : <Circle size={12} />}
+                <span className="truncate max-w-[140px]">{s.name || '（名称未設定）'}</span>
+              </button>
+            )
+          })}
 
-          <button
-            onClick={handleSaveNew}
-            className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 shrink-0"
-          >
-            別名保存
-          </button>
-
-          <button
-            onClick={handleNew}
-            className="px-3 py-1 text-sm border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 shrink-0"
-          >
+          <button onClick={handleNew} className="btn btn-ghost !py-1 !px-2 !text-xs">
+            <Plus size={12} />
             新規
           </button>
 
-          <button
-            onClick={handleReset}
-            className="px-3 py-1 text-sm border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50 shrink-0"
-          >
-            リセット
-          </button>
-
-          {/* 一覧パネルトグル */}
           {savedList.length > 0 && (
             <button
               onClick={() => setPanelOpen(!panelOpen)}
-              className={`px-2 py-1 text-sm border rounded-md shrink-0 ${
-                panelOpen
-                  ? 'border-blue-400 text-blue-600 bg-blue-50'
-                  : 'border-gray-300 text-gray-500 hover:bg-gray-50'
-              }`}
-              title="シナリオ一覧を表示"
+              className="btn btn-ghost !py-1 !px-2 !text-xs"
+              title="シナリオ一覧 / 並べ替え / 削除"
             >
-              一覧 {panelOpen ? '▲' : '▼'}
+              管理 ({savedList.length})
+              {panelOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
           )}
 
-          {/* ドロップダウンパネル */}
-          {panelOpen && savedList.length > 0 && (
-            <div className="absolute right-0 top-full mt-1 w-80 bg-white rounded-lg border border-gray-200 shadow-lg z-50 p-3">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">保存済みシナリオ</h3>
-              <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+          {panelOpen && (
+            <div
+              className="absolute left-0 top-full mt-2 w-80 t-card rounded-xl border t-border p-3 z-50"
+              style={{ boxShadow: 'var(--shadow-pop)' }}
+            >
+              <h3 className="text-xs font-bold t-fg2 mb-2 uppercase tracking-widest">保存済みシナリオ</h3>
+              <ul className="space-y-1 max-h-64 overflow-y-auto">
                 {savedList.map((s, i) => {
                   const isActive = s.id === activeId
                   return (
                     <li
                       key={s.id}
-                      className={`flex items-center gap-1 px-2 py-1.5 rounded-md border text-sm ${
-                        isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-100 bg-gray-50'
-                      }`}
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm"
+                      style={{
+                        background: isActive ? 'var(--brand-soft)' : 'var(--bg-inset)',
+                        border: isActive ? '1px solid var(--brand)' : '1px solid transparent',
+                      }}
                     >
                       <div className="flex flex-col shrink-0">
                         <button
                           onClick={() => handleReorder(s.id, 'up')}
                           disabled={i === 0}
-                          className="text-gray-400 hover:text-gray-700 disabled:opacity-20 leading-none text-xs"
-                        >▲</button>
+                          className="leading-none text-[10px] t-fg4 hover:t-fg disabled:opacity-20"
+                        >
+                          ▲
+                        </button>
                         <button
                           onClick={() => handleReorder(s.id, 'down')}
                           disabled={i === savedList.length - 1}
-                          className="text-gray-400 hover:text-gray-700 disabled:opacity-20 leading-none text-xs"
-                        >▼</button>
+                          className="leading-none text-[10px] t-fg4 hover:t-fg disabled:opacity-20"
+                        >
+                          ▼
+                        </button>
                       </div>
-                      <span className={`flex-1 truncate ${isActive ? 'font-semibold text-blue-700' : 'text-gray-700'}`}>
-                        {i === 0 && <span className="mr-1 text-xs text-orange-500 font-normal">自動ロード</span>}
-                        {isActive && <span className="mr-1 text-blue-500">●</span>}
+                      <span className={`flex-1 truncate ${isActive ? 'font-semibold t-brand' : 't-fg2'}`}>
+                        {i === 0 && <span className="mr-1 text-[10px] t-accent">自動</span>}
                         {s.name || '（名称未設定）'}
                       </span>
                       <div className="flex gap-1 shrink-0">
                         {!isActive && (
                           <button
                             onClick={() => { handleSelect(s.id); setPanelOpen(false) }}
-                            className="text-xs text-blue-600 hover:underline px-1"
+                            className="text-[11px] t-brand hover:underline px-1"
                           >
                             ロード
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(s.id, s.name)}
-                          className="text-xs text-red-500 hover:underline px-1"
+                          className="text-[11px] t-danger hover:underline px-1"
                         >
                           削除
                         </button>
@@ -224,11 +227,40 @@ export function Header() {
                   )
                 })}
               </ul>
-              <p className="text-xs text-gray-400 mt-2">
-                ※ 先頭のシナリオを起動時に自動ロード
-              </p>
+              <p className="text-[11px] t-fg4 mt-2">※ 先頭のシナリオを起動時に自動ロード</p>
             </div>
           )}
+        </div>
+
+        {/* actions */}
+        <div className="flex items-center gap-2">
+          <button onClick={handleSave} className="btn btn-primary !py-1.5 !px-3 !text-xs">
+            <Download size={12} /> {activeId ? '上書き' : '保存'}
+          </button>
+          <button onClick={handleSaveNew} className="btn btn-soft !py-1.5 !px-3 !text-xs">
+            別名保存
+          </button>
+        </div>
+
+        {/* live summary */}
+        <div className="flex items-center gap-4 text-xs pl-3 border-l t-border">
+          <div className="flex flex-col items-end">
+            <span className="t-fg4 text-[10px] uppercase tracking-wider">月返済</span>
+            <span className="kpi-num t-fg" style={{ fontSize: 15 }}>¥{monthly}</span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="t-fg4 text-[10px] uppercase tracking-wider">完済</span>
+            <span className="kpi-num t-fg" style={{ fontSize: 15 }}>{payoff}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="ring" style={{ ['--p' as string]: feasPct, ['--c' as string]: feasTone, width: 36, height: 36 } as React.CSSProperties}>
+              <span className="text-[9px] font-bold" style={{ color: feasTone }}>{feasPct}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] t-fg4 uppercase tracking-wider">老後</span>
+              <span className="text-xs font-bold" style={{ color: feasTone }}>{feasLabel}</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>

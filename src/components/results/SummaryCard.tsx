@@ -1,69 +1,85 @@
+import {
+  Wallet, Landmark, Percent, Flag, Calendar, CalendarClock,
+  PiggyBank, ShieldCheck, TrendingUp, TrendingDown,
+  LucideIcon,
+} from 'lucide-react'
 import { useScenario } from '../../store/scenario-store'
 
 const fmt = (n: number) => Math.round(n).toLocaleString()
-const fmtMan = (n: number) => `${Math.round(n / 10000).toLocaleString()}万円`
+const fmtMan = (n: number) => Math.round(n / 10000).toLocaleString()
+
+type Tone = 'brand' | 'safe' | 'warn' | 'danger' | 'neutral'
+
+function KPI({
+  icon: Icon, label, value, unit, delta, tone = 'neutral',
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  unit?: string
+  delta?: string
+  tone?: Tone
+}) {
+  const toneBg =
+    tone === 'safe' ? 'var(--safe-soft)' :
+    tone === 'warn' ? 'var(--warn-soft)' :
+    tone === 'danger' ? 'var(--danger-soft)' :
+    tone === 'brand' ? 'var(--brand-soft)' :
+    'var(--bg-inset)'
+  const toneFg =
+    tone === 'safe' ? 'var(--safe)' :
+    tone === 'warn' ? 'var(--warn)' :
+    tone === 'danger' ? 'var(--danger)' :
+    tone === 'brand' ? 'var(--brand)' :
+    'var(--fg-3)'
+
+  const deltaTone = delta?.startsWith('−') || delta?.startsWith('-')
+    ? 'var(--safe)'     // a decrease in interest/balance is good
+    : 'var(--brand)'
+
+  return (
+    <div className="card p-5 relative overflow-hidden" style={{ minHeight: 138 }}>
+      <div className="flex items-center gap-2 mb-4">
+        <span
+          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          style={{ background: toneBg, color: toneFg }}
+        >
+          <Icon size={14} />
+        </span>
+        <span className="text-[11px] font-bold t-fg3 uppercase tracking-widest">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="kpi-num t-fg" style={{ fontSize: 26 }}>{value}</span>
+        {unit && <span className="text-xs t-fg3 font-medium">{unit}</span>}
+      </div>
+      {delta && (
+        <div className="mt-1 text-[11px] flex items-center gap-1" style={{ color: deltaTone }}>
+          {delta.startsWith('+') ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+          <span className="font-mono font-semibold">{delta}</span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function SummaryCard() {
   const { result } = useScenario()
-  const { summary } = result
+  const { summary, rows } = result
+  const row65 = rows.find((r) => r.age === 65)
+  const liquidAt65 = row65?.endingAssets ?? 0
 
-  const feasibilityColor = {
-    safe: 'text-green-600 bg-green-50',
-    warning: 'text-amber-600 bg-amber-50',
-    danger: 'text-red-600 bg-red-50',
-  }[summary.retirementFeasibility]
-
-  const feasibilityLabel = {
-    safe: '安全',
-    warning: '注意',
-    danger: '危険',
-  }[summary.retirementFeasibility]
+  const short = summary.firstShortageAge
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">サマリー</h2>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">月返済額</div>
-          <div className="text-lg font-bold text-gray-900">¥{fmt(summary.currentMonthlyPayment)}</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">総返済額</div>
-          <div className="text-lg font-bold text-gray-900">{fmtMan(summary.totalRepayment)}</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">総利息</div>
-          <div className="text-lg font-bold text-gray-900">{fmtMan(summary.totalInterest)}</div>
-        </div>
-        <div className={`rounded-lg p-3 ${feasibilityColor}`}>
-          <div className="text-xs mb-1">老後判定</div>
-          <div className="text-lg font-bold">{feasibilityLabel}</div>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">60歳時残債</div>
-          <div className="text-lg font-bold text-gray-900">{fmtMan(summary.balanceAt60)}</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">65歳時残債</div>
-          <div className="text-lg font-bold text-gray-900">{fmtMan(summary.balanceAt65)}</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">完済年齢</div>
-          <div className="text-lg font-bold text-gray-900">
-            {summary.payoffAge ? `${summary.payoffAge}歳` : '未完済'}
-          </div>
-        </div>
-        <div className={`rounded-lg p-3 ${summary.firstShortageAge ? 'bg-red-50' : 'bg-green-50'}`}>
-          <div className={`text-xs mb-1 ${summary.firstShortageAge ? 'text-red-600' : 'text-green-600'}`}>
-            資金ショート
-          </div>
-          <div className={`text-lg font-bold ${summary.firstShortageAge ? 'text-red-700' : 'text-green-700'}`}>
-            {summary.firstShortageAge ? `${summary.firstShortageAge}歳` : 'なし'}
-          </div>
-        </div>
-      </div>
+    <div className="stagger grid grid-cols-2 md:grid-cols-4 gap-3">
+      <KPI icon={Wallet}   label="月返済額"   value={`¥${fmt(summary.currentMonthlyPayment)}`} tone="brand" />
+      <KPI icon={Landmark} label="総返済額"   value={fmtMan(summary.totalRepayment)} unit="万円" />
+      <KPI icon={Percent}  label="総利息"     value={fmtMan(summary.totalInterest)}   unit="万円" />
+      <KPI icon={Flag}     label="完済年齢"   value={summary.payoffAge ? `${summary.payoffAge}` : '未'} unit={summary.payoffAge ? '歳' : '完済'} tone={summary.payoffAge ? 'brand' : 'danger'} />
+      <KPI icon={Calendar}      label="60歳時残債" value={fmtMan(summary.balanceAt60)} unit="万円" />
+      <KPI icon={CalendarClock} label="65歳時残債" value={fmtMan(summary.balanceAt65)} unit="万円" />
+      <KPI icon={PiggyBank}     label="65歳時資産" value={fmtMan(liquidAt65)} unit="万円" tone="safe" />
+      <KPI icon={ShieldCheck}   label="資金ショート" value={short ? `${short}歳` : 'なし'} tone={short ? 'danger' : 'safe'} />
     </div>
   )
 }
